@@ -1015,7 +1015,7 @@ function updateShare(){
   if(!look)return;
   document.querySelector('.share-choice').hidden=false;
   const cut=CUTS.find(c=>c.k===(cutUser||(look.cut==='sl'?'sl':'ss')));
-  $('share-summary').textContent=short(look.n)+' · '+(mode==='vc'?'Vice':'FINAL BOSS')+' · '+(pick==='jersey'?cut.it+' jersey pair':'Full kit')+'. Share the same starting point.';
+  $('share-summary').textContent=short(look.n)+', '+(mode==='vc'?'Vice':'FINAL BOSS')+', '+(pick==='jersey'?cut.it+' jersey pair':'Full kit')+'. Share the same starting point.';
   $('share-status').textContent='';$('share-fallback').hidden=true;
 }
 $('share-look').addEventListener('click',async()=>{
@@ -1079,10 +1079,22 @@ tick();setInterval(tick,1000);
 
 /* ---------- announcer ---------- */
 const vo=$('vo'),ab=$('announce');
+let announceRequest=0;
 function announceReset(){ab.setAttribute('aria-pressed','false');ab.textContent='Hear the announcer'}
-ab.addEventListener('click',()=>{if(vo.paused){ab.setAttribute('aria-pressed','true');ab.textContent='Stop the announcer';vo.play().catch(()=>{announceReset();ab.textContent='Try the announcer again'})}else{vo.pause();vo.currentTime=0;announceReset()}});
-vo.addEventListener('error',()=>{announceReset();ab.textContent='Try the announcer again'});
-vo.addEventListener('ended',announceReset);
+ab.addEventListener('click',()=>{
+  const request=++announceRequest;
+  if(vo.paused){
+    vo.play().then(()=>{
+      if(request!==announceRequest||vo.paused)return;
+      ab.setAttribute('aria-pressed','true');ab.textContent='Stop the announcer';
+    }).catch(()=>{
+      if(request!==announceRequest)return;
+      announceReset();ab.textContent='Try the announcer again';
+    });
+  }else{vo.pause();vo.currentTime=0;announceReset()}
+});
+vo.addEventListener('ended',()=>{announceRequest++;announceReset()});
+vo.addEventListener('error',()=>{announceRequest++;announceReset();ab.textContent='Try the announcer again'});
 
 /* ---------- sound (opt-in) ---------- */
 function blip(f,d,type){if(!sound||!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'square';o.frequency.value=f;g.gain.value=.06;g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}

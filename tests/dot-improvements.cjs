@@ -18,6 +18,8 @@ test('default cut is included when no override exists',()=>{c.pick='jersey';c.cu
 test('gear radio group handles arrows and stops propagation',()=>{assert.match(source,/\['pick','cutrow'\]/);assert.match(source,/e\.preventDefault\(\);e\.stopPropagation\(\)/);assert.match(source,/#grid9,#play,#pick,#cutrow,dialog/)});
 test('radio groups expose one tab stop and restore focus',()=>{assert.match(source,/b\.tabIndex=on\?0:-1/);assert.match(source,/tabindex="\$\{c\.k===ck\?0:-1\}"/);assert.match(source,/querySelector\('\[aria-checked="true"\]'\)\.focus\(\)/)});
 test('clipboard rejection gives a selected manual copy link',()=>{assert.match(source,/share-fallback'\)\.hidden=false/);assert.match(source,/share-url'\)\.select\(\)/);assert.match(source,/role="status" aria-live="polite"/)});
-test('audio play rejection returns control to retry state',()=>assert.match(source,/vo\.play\(\)\.catch\(\(\)=>\{announceReset\(\)/));
+test('audio play rejection returns control to retry state',()=>assert.match(source,/\.catch\(\(\)=>\{\s*if\(request!==announceRequest\)return;\s*announceReset\(\);ab\.textContent='Try the announcer again'/));
+test('a stale announcer request cannot flip the button',()=>{assert.match(source,/const request=\+\+announceRequest;/);assert.match(source,/vo\.play\(\)\.then\(\(\)=>\{\s*if\(request!==announceRequest\|\|vo\.paused\)return;/)});
+test('share summary avoids the dot separator',()=>assert.doesNotMatch(source,/' · '/));
 test('social preview image is absolute',()=>assert.match(source,/<meta property="og:image" content="https:\/\/gordonusc.github.io\/final-boss\/assets\/hero.jpg">/));
 console.log(`${checks} FINAL BOSS focused checks passed. State tests and source contracts; no gameplay/rendering asserted.`);
