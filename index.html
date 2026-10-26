@@ -883,7 +883,7 @@ function renderBacks(){
 
 /* ---------- jersey vote: one per device, tallied in Gordon's Google Sheet ---------- */
 (function(){
-  const VOTE_URL='__VOTE_URL__';
+  const VOTE_URL='https://script.google.com/macros/s/AKfycbxVeQ5rCwRxNCaTxGkUsNKQvPCqcycmlqSNy5Qaq7__Wk27siOvhkIhmUNCSPdtyjo-KA/exec';
   const box=$('vote'); if(!box||VOTE_URL.indexOf('https://script.google.com/')!==0)return;
   box.hidden=false;
   let vid=''; try{vid=localStorage.getItem('fb-voter')||'';if(!vid){vid=Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('fb-voter',vid)}}catch(e){vid=Math.random().toString(36).slice(2,14)}
