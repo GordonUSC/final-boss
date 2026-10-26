@@ -834,6 +834,7 @@ class Game {
     this.controlKey = rosterKey(this.opts.player) || rosterKey(this.opts.control) || 'BELLAMY';
     this.squad = ROSTER.map(r => r.key);
     this.opp = oppFrom(this.opts.opponent);   // data-driven opponent (teams.json); THE GLITCHES by default
+    this.ruleRandom = Math.random;   // replaced only in deterministic rule tests
     this.sfx = new Sfx(); this.sfx.base = this.base + 'assets/audio/';
     // QA ring buffer: countdown and announcer events with sim time, so automated playtests can measure timing
     this.qa = []; this.qaLog = (ev, o) => { this.qa.push(Object.assign({ ev, frame: this.frame, ctlT: +(this.ctlT || 0).toFixed(3), ms: Math.round(performance.now()) }, o || {})); if (this.qa.length > 80) this.qa.shift(); };
@@ -1265,6 +1266,7 @@ class Game {
         if (k === 'fs') this.toggleFullscreen(); else if (inGame && this.phase !== 'handshake') { this.paused ? this.resume() : this.pause('menu'); }
         return;
       }
+      if (this.phase === 'handshake') { if (k === 'enter' || k === 'throw' || k === 'pause') this.finishHandshake(); e.preventDefault(); return; }
       // in full window, Esc on the title or results card goes back to the page
       if (!inGame && k === 'pause' && this.full) { this.setFull(false); e.preventDefault(); return; }
       if (!inGame) { if (k === 'enter' && this.phase === 'title' && document.activeElement === this.$.stage) { this.start(); e.preventDefault(); } return; }
@@ -1755,6 +1757,7 @@ class Game {
     if (b.hist) b.hist.length = 0;
     Object.assign(b, { state: 'rest', x: 0, z: 0, h: 0.22, vx: 0, vz: 0, vh: 0, holder: null, thrower: null, team: -1, live: false, crossed: false, cleared: true, rushTeam: -1,
       type: 'normal', power: false, age: 0, hitSet: new Set(), target: null, pending: null, squash: 0, spin: b.spin || 0, trailC: '#ffffff', bounces: 0, claim: null, outF: 0, flash: 0, grav: 0, fromSide: 0, deflected: false, defSide: 0, forceHead: false, restF: 0 });
+    b.mesh.visible = b.shadow.visible = b.glow.visible = true;   // the post-match ceremony hides them
   }
   buildTeams() {
     this.opp = oppFrom(this.opts.opponent);
@@ -1804,7 +1807,7 @@ class Game {
 
   // ------------------------------------------------ match flow
   resetMatch() {
-    this.clock = RULES.match; this.points = [0, 0]; this.gameNo = 0; this.ot = false; this.otClock = RULES.ot; this.sudden = false; this.over = false;
+    this.handshake = null; this.clock = RULES.match; this.points = [0, 0]; this.gameNo = 0; this.ot = false; this.otClock = RULES.ot; this.sudden = false; this.over = false;
     this.score = 0; this.combo = 0; this.stats = { hits: 0, catches: 0, power: 0, kos: 0, bestCombo: 0, headshots: 0, backIn: 0, blocks: 0 };
     this.timeoutUsed = false; this.timeoutT = 0; this.result = null; this.lastBig = -1; this.lastCtl = -1;
     this.setupGame();
@@ -1813,7 +1816,7 @@ class Game {
   setupGame() {
     this.gameNo++; this.p2 = false; this.mom = 0; this.coach = [{}, {}]; this.ctlTeam = -1; this.ctlT = 0; this.lastCtlSec = -1; this.gameEndT = 0; this.rushT = 999; this.falseStart = false;
     this.$.boss.classList.remove('on'); this.$.ctl.hidden = true;
-    this.queue = [[], []]; this.tide = { low: 0, high: 0 };
+    this.queue = [[], []]; this.outSequence = 0; this.tide = { low: 0, high: 0 };
     for (const t of [0, 1]) {
       const ps = this.teams[t];
       ps.forEach((a, i) => {
@@ -1858,7 +1861,7 @@ class Game {
     this.phase = 'brief'; this.briefT = 0; this.briefGo = false;
     if (this.ot) this.sfx.vo('vo_ot', 3); else if (this.lastCtl >= 0) this.sfx.vo('vo_next', 1);
     const touch = this.root.classList.contains('has-touch');
-    const title = this.ot ? 'OVERTIME' : 'GAME ' + this.gameNo;
+    const title = this.ot ? 'OVERTIME: 60 S' : 'GAME ' + this.gameNo;
     const rules = [['rush', 'Rush right only', 'on GO, run only for the balls on your right as you face the other team'], ['line', 'Clear the line', 'carry a rushed ball past your attack line before you throw'], ['catch', 'Catch = back in', 'the thrower is out and your next teammate returns'],
       ['head', 'No headshots', 'a standing headshot puts the thrower out'], ['clock', '15 s control', 'hold 3 of 5 balls and the clock runs'], ['back', 'Back line only', 'leave only out the back, 10 s to return']];
     const ctl = touch ? 'Left pad moves (flick to dash). <b>THROW</b>, <b>CATCH</b> (hold to duck), <b>JUMP</b>, <b>PASS</b>.'
@@ -1897,7 +1900,7 @@ class Game {
     this.phase = 'rps'; this.rpsT = 0; this.rpsPick = null; this.rpsCPU = null; this.rpsDone = 0;
     const names = ['ROCK', 'PAPER', 'SCISSORS'];
     this.$.vs.innerHTML = `<div class="fbg-rps"><h3>RO-SHAM-BO</h3><p>${this.gameNo === 1 && !this.ot ? 'Winner takes 3 balls on its right.' : (this.ot ? 'Overtime. Winner takes 3 balls.' : 'Game ' + this.gameNo + '. Winner takes 3 balls on its right.')}</p>
-      <div class="fbg-rpsb">${names.map((n, i) => `<button type="button" data-r="${i}">${rpsIcon(i)}<b>${n}</b><small>${i + 1}</small></button>`).join('')}</div><div class="fbg-rpsr" aria-live="polite"></div></div>`;
+      <div class="fbg-rpsb">${names.map((n, i) => `<button type="button" data-r="${i}">${rpsIcon(i)}<b>${n}</b><small>${i + 1}</small></button>`).join('')}</div><div class="fbg-rpsr" aria-live="polite"></div>${this.gameNo > 1 || this.ot ? '<i class="fbg-btime"></i>' : ''}</div>`;
     this.$.vs.hidden = false; this.$.vs.classList.add('live');
     this.$.vs.querySelectorAll('[data-r]').forEach(b => b.addEventListener('click', () => { if (this.rpsPick == null) this.rpsPick = +b.dataset.r; }));
   }
@@ -1906,7 +1909,9 @@ class Game {
     for (const a of this.all) if (a.active) { a.tgt = this.poseIdle(a); this.blend(a, 0.2); this.place(a); }
     if (this.rpsPick == null) {
       if (this.edge.rock) this.rpsPick = 0; else if (this.edge.paper) this.rpsPick = 1; else if (this.edge.scissors) this.rpsPick = 2; else if (this.edge.enter || this.edge.throw) this.rpsPick = (Math.random() * 3) | 0;
-      else if (this.rpsT > 150) this.rpsPick = (Math.random() * 3) | 0;
+      // game 1 waits for the player's pick (a first-timer needs the time); later games pick for you after 2.5 s, with a visible timer
+      else if ((this.gameNo > 1 || this.ot) && this.rpsT > 150) this.rpsPick = (Math.random() * 3) | 0;
+      if ((this.gameNo > 1 || this.ot) && this.rpsPick == null) { const bar = this.$.vs.querySelector('.fbg-btime'); if (bar) bar.style.transform = `scaleX(${Math.max(0, 1 - this.rpsT / 150).toFixed(3)})`; }
     }
     this.edge = {};
     if (this.rpsPick != null && this.rpsCPU == null) {
@@ -1942,6 +1947,7 @@ class Game {
     if (this.lineT === 90) { this.phase = 'play'; this.rushT = 0; this.cheer('*go'); this.popBrush('RUSH!', (this.rpsWinner === 0 ? 'FINAL BOSS' : '' + this.opp.short + '') + ' rush 3 balls', '', 0.3, 1.3); this.sfx.crowd(true); this.sfx.vo('vo_go', 3); this.sfx.whistle(); }
   }
   pause(auto) {
+    if (this.phase === 'handshake') { if (!auto) this.finishHandshake(); return; }
     if (this.phase === 'title' || this.phase === 'result' || this.dead) return;
     this.paused = true; this.$.pause.textContent = 'Resume';
     const timeout = !auto && !this.timeoutUsed, menu = auto === 'menu';
@@ -1962,10 +1968,52 @@ class Game {
   }
   resume() { if (!this.paused) return; const rot = this.root.querySelector('.fbg-rotate'); if (rot && !rot.hidden) return; this.paused = false; this.timeoutT = 0; this.$.ov.hidden = true; this.$.pause.textContent = this.timeoutUsed ? 'Pause' : 'Time out'; this.$.stage.focus({ preventScroll: true }); }
   endMatch(result) {
-    if (this.over) return; this.over = true; this.phase = 'result'; this.resultT = 0; this.result = result;
+    if (this.over) return; this.over = true; this.phase = 'handshake'; this.resultT = 0; this.result = result;
+    this.paused = false; this.keys = {}; this.edge = {}; this.timeoutT = 0; this.hitstop = 0;
+    this.$.ov.hidden = true; this.$.vs.hidden = true; this.$.pause.textContent = 'View result';
+    this.handshake = { stage: 'assemble', frame: 0, pairs: new Set(), lines: this.teams.map(t => t.filter(a => a.active)) };
+    for (const a of this.all) { a.held = null; a.h = 0; a.vx = a.vz = a.vh = 0; a.popScale = 1; a.shake = 0; a.role = 'ceremony'; a.oob = 0; a.stumbleT = 0; a.set('walk'); a.root.visible = a.active; }
+    for (const b of this.balls) { this.resetBall(b); b.mesh.visible = b.shadow.visible = b.glow.visible = false; }
+    if (this.lanes) this.showLanes(false);
     this.sfx.buzz(); this.crowdReact(result.win ? 'matchwin' : 'matchlose'); this.sfx.vo(result.win ? 'vo_win' : 'vo_lose', 4);
-    this.popCenter(result.win ? 'MATCH: FINAL BOSS' : 'MATCH: ' + this.opp.short, result.win ? 'big gold' : 'big red');
-    setTimeout(() => this.showResults(), this.rm ? 600 : 1600);
+    this.popCenter('GOOD GAME', 'big gold'); this.say('Match complete. Teams form a sportsmanship line. Press Enter or View result to skip.');
+  }
+  handshakeTick() {
+    const h = this.handshake; if (!h) return;
+    h.frame++;
+    const assembleFrames = this.rm ? 45 : 240, passFrames = 240;
+    for (let t = 0; t < 2; t++) h.lines[t].forEach((a, i) => {
+      const dir = t === 0 ? 1 : -1, lane = t === 0 ? 0.70 : -0.70;
+      const startX = -dir * (1.6 + i * 0.85);
+      if (h.stage === 'assemble') {
+        if (this.rm) { a.x = startX; a.z = lane; a.set('idle'); }
+        else this.walkTo(a, startX, lane, 5);
+      } else {
+        const travel = Math.min(1, h.frame / passFrames) * 9.15;
+        a.x = startX + dir * travel; a.z = lane;
+        if (a.state !== 'walk') a.set('walk'); else a.st++;
+      }
+      if (h.stage === 'pass' || a.state !== 'walk') a.yaw = dir * Math.PI / 2;
+      if (h.stage === 'assemble' && a.state === 'walk') a.st++;
+      a.tgt = a.state === 'walk' ? this.poseWalk(a) : a.blankPose();
+      if (a.greetT > 0) { a.greetT--; a.tgt.sh[2] = -1.2; a.tgt.sh[3] = 0.85; a.tgt.el[1] = -0.5; }
+      this.blend(a, 0.35); this.place(a); a.setExpr('happy');
+    });
+    if (h.stage === 'assemble' && h.frame >= assembleFrames) { h.stage = 'pass'; h.frame = 0; this.popCenter('GOOD GAME • WELL PLAYED', 'small gold', 0.5, 2); }
+    else if (h.stage === 'pass') {
+      for (let i = 0; i < h.lines[0].length; i++) for (let j = 0; j < h.lines[1].length; j++) {
+        const a = h.lines[0][i], b = h.lines[1][j], key = i + ':' + j;
+        if (Math.abs(a.x - b.x) < 0.22 && !h.pairs.has(key)) { h.pairs.add(key); a.greetT = b.greetT = 14; }
+      }
+      if (h.frame >= passFrames) this.finishHandshake();
+    }
+    this.edge = {};
+  }
+  finishHandshake() {
+    if (this.dead || this.phase !== 'handshake') return;
+    this.phase = 'result'; this.resultT = 0; this.$.pause.textContent = 'Time out';
+    for (const a of this.all) { a.greetT = 0; a.set('idle'); }
+    this.showResults();
   }
   showResults() {
     if (this.phase !== 'result') return;
@@ -1997,12 +2045,12 @@ class Game {
     this.sfx.music('music_menu');
     this.$.card.innerHTML = `${this.edChip()}
       <h2>BOSS <em>RUSH</em></h2>
-      <p>Sin City style. 8 on 8, 5 balls, no sting. Most games in 3 minutes wins.</p>
+      <p>Sin City style, arcade format: 8 on 8, 5 balls, no sting. Most games in 3 minutes wins.</p>
       <ul class="fbg-rules">${rules.map(r => `<li>${ruleIcon(r[0])}<b>${r[1]}</b><span>${r[2]}</span></li>`).join('')}</ul>
       <details class="fbg-more"><summary>How Sin City plays</summary>
         <p>Both teams start on their back line. Ro-sham-bo decides the first game: the winner rushes the 3 balls on its right, the other team the 2 on its right. After that, the 3 balls alternate every game. On GO, rush only the balls on your right as you face the other team. Leave early and you lose those balls.</p>
         <p>You are out if a live ball hits you and nobody catches it, if your throw is caught, if you cross the center line or a side line, or if you stay out the back for more than 10 seconds. A ball held in your hands can block a throw.</p>
-        <p>A ball is live once it crosses the center line, and dead once it touches the floor, a wall, or another ball. A game ends when a team is out, worth 1 point. Mercy at an 8 game lead. A tie goes to overtime, then sudden death. Play on the honor system.</p>
+        <p>A ball is live once it crosses the center line, and dead once it touches the floor, a wall, or another ball. A game ends when a team is out, worth 1 point. Mercy at an 8 game lead. A tie goes to a shortened 60 second overtime (the tournament plays longer), then sudden death. Play on the honor system.</p>
       </details>
       <ol class="fbg-how">${how}</ol>
       <div class="fbg-lineup"><h3>PICK YOUR PLAYER</h3><div class="fbg-pool"></div></div>
@@ -2158,6 +2206,7 @@ class Game {
       case 'lineup': this.lineupTick(); return;
       case 'gameover': this.gameOverTick(); return;
       case 'ot-wait': for (const a of this.all) if (a.active) { this.control(a, NOI); this.physics(a); this.animate(a); } for (const b of this.balls) this.updateBall(b); this.edge = {}; return;
+      case 'handshake': this.handshakeTick(); return;
       case 'result':
         this.resultT++;
         for (const a of this.all) if (a.active) { this.control(a, NOI); this.physics(a); this.animate(a); }
@@ -2276,7 +2325,7 @@ class Game {
     // toe the line: arms wheel, lean back; recover or carry over (out)
     a.set('teeter'); a.vx = a.vz = 0; a.tee = { kind, out, speed, f: 0, saved: false };
     const r = a.rt || FB_BASE;
-    a.tee.fall = this.aiPlays(a) ? Math.random() < Math.min(0.9, Math.max(0, (speed - 1.6) / 4.5)) * (1 - r.foot) * 0.9 : null;
+    a.tee.fall = this.aiPlays(a) ? (this.ruleRandom ? this.ruleRandom() : Math.random()) < Math.min(0.9, Math.max(0, (speed - 1.6) / 4.5)) * (1 - r.foot) * 0.9 : null;
     this.awStat('teeter'); this.lineFlash = 30;
   }
   teeterTick(a, it) {
@@ -2793,9 +2842,12 @@ class Game {
     const backOK = this.backLineBallFor(a);
     const isUser = a === this.user;
     // center line: CPU never crosses; the player may, and pays for it in rules()
-    // after the rush nobody slides over a line: reaching one with speed starts a teeter (P0f); a slow step just stops at it
-    const cen = rush ? (isUser ? -1.0 : 0.05) : 0.06;
-    if (!rush && a.role === 'in' && a.state !== 'teeter' && a.x * s < cen + 0.05 && a.vx * s < -1.0 && !LOCKED.has(a.state)) this.startTeeter(a, 'center', 0, Math.abs(a.vx));
+    // P0f, identical in both editions: after the rush a grounded player is held at the line; reaching it with speed starts a visible teeter,
+    // and only momentum that carries over is an out. Airborne players and anyone already across are not held back, so rules() calls the crossing.
+    const grounded = a.h <= 0.001 && a.state !== 'knock' && a.state !== 'air', px = a.x - a.vx * DT, pz = a.z - a.vz * DT;
+    const hold = !rush && grounded && px * s > -0.02;
+    if (hold && a.role === 'in' && a.state !== 'teeter' && a.x * s < 0.11 && a.vx * s < -1.0 && !LOCKED.has(a.state)) this.startTeeter(a, 'center', 0, Math.abs(a.vx));
+    const cen = rush ? -1.0 : (hold ? 0.06 : -9);
     if (s < 0) a.x = Math.min(-cen, a.x); else a.x = Math.max(cen, a.x);
     // back line: only to fetch a ball that is already out
     const maxX = backOK || a.oob > 0 ? HX + 1.6 : HX - 0.25;
@@ -2803,9 +2855,9 @@ class Game {
     const beyondBack = Math.abs(a.x) > HX;
     if (beyondBack && a.oob === 0 && a.role === 'in') { a.oob = 1; if (isUser) this.ref('OUT THE BACK: 10 S'); }
     if (!beyondBack && a.oob > 0) a.oob = 0;
-    const zl = beyondBack ? HZ + 1.2 : HZ - 0.08;
-    if (!beyondBack && a.role === 'in' && a.state !== 'teeter' && Math.abs(a.z) > zl - 0.04 && a.vz * Math.sign(a.z) > 1.0 && !LOCKED.has(a.state) && this.phase === 'play') this.startTeeter(a, 'side', Math.sign(a.z), Math.abs(a.vz));
-    a.z = Math.max(-zl, Math.min(zl, a.z));
+    const zl = beyondBack ? HZ + 1.2 : HZ - 0.08, holdZ = !beyondBack && grounded && Math.abs(pz) <= HZ + 0.02;
+    if (holdZ && a.role === 'in' && a.state !== 'teeter' && Math.abs(a.z) > zl - 0.04 && a.vz * Math.sign(a.z) > 1.0 && !LOCKED.has(a.state) && this.phase === 'play') this.startTeeter(a, 'side', Math.sign(a.z), Math.abs(a.vz));
+    if (holdZ || beyondBack) a.z = Math.max(-zl, Math.min(zl, a.z));
   }
   backLineBallFor(a) {
     if (this.liveCount(a.team) <= 1) return false;
@@ -2841,7 +2893,12 @@ class Game {
       }
       if (B.type !== 'hop' && B.h <= 0.22) { B.h = 0.22; this.killBall(B, 'floor'); this.dustAt(B.x, B.z, 2); return; }
       if (B.type === 'hop' && B.bounces > 5) { this.killBall(B, 'floor'); return; }
-      if (Math.abs(B.x) > 12.3 || Math.abs(B.z) > HZ + 2.1) { this.killBall(B, 'wall'); return; }
+      if (Math.abs(B.x) > 12.3 || Math.abs(B.z) > HZ + 2.1) {
+        if (!B.deflected) { this.killBall(B, 'wall'); return; }
+        // keep a lofted deflection in the arena until it reaches the floor
+        if (Math.abs(B.x) > 12.3) { B.x = Math.sign(B.x) * 12.3; B.vx *= -0.35; }
+        if (Math.abs(B.z) > HZ + 2.1) { B.z = Math.sign(B.z) * (HZ + 2.1); B.vz *= -0.35; }
+      }
       this.placeBallMesh(B); return;
     }
     // loose (dead) ball
@@ -2887,7 +2944,7 @@ class Game {
       if (B.state !== 'flight' || B.type === 'pass' || B.pending) continue;
       for (const f of this.all) {
         if (!f.active || f.role !== 'in' || f.oob > 0 || B.hitSet.has(f)) continue;
-        if (B.pop ? f.team !== B.pop.team : f.team === B.team) continue;
+        if (f.team === B.team && !B.deflected) continue;
         if (f.state === 'knock' || f.state === 'down' || f.state === 'ko' || f.state === 'hitstun') continue;
         // evading a ball you saw: the better the footwork, the smaller the target (beginner about 1.06x, elite about 0.76x)
         const dh = DODGE_HIT[f.state], fr = f.ai && f.ai.react, ev = fr && fr.aware && fr.B === B && fr.kind !== 'catch' && fr.kind !== 'block' && fr.kind !== 'freeze';
@@ -2910,6 +2967,10 @@ class Game {
   }
   contact(f, B) {
     const thrower = B.thrower;
+    if (f.team === B.team) {
+      if (B.deflected && B.live && !f.held && f.state === 'catchready' && (this.wf || 0) - f.catchF <= TUNE.catchBobble) this.doCatch(f, B, true);
+      return;
+    }
     // P0j: a late athletic move (lean, spin, dive, matador) against a ball the player saw is a skill check at contact
     const fr = f.ai && f.ai.react;
     if (fr && fr.aware && fr.B === B && fr.done && DODGES.has(fr.kind) && f.state !== 'hitstun') {
@@ -2950,14 +3011,17 @@ class Game {
     this.applyHit(f, B);
   }
   block(f, B, timed) {
-    B.hitSet.add(f); B.vx = -B.vx * 0.3 + (Math.random() - 0.5) * 2; B.vz = -B.vz * 0.3 + (Math.random() - 0.5) * 2; B.vh = 5; B.grav = GRAV;
-    B.deflected = true; B.defSide = f.side; B.type = 'normal'; B.power = false;
+    B.hitSet.add(f); B.vx = -B.vx * 0.3 + (this.ruleRandom() - 0.5) * 2; B.vz = -B.vz * 0.3 + (this.ruleRandom() - 0.5) * 2;
+    const loft = timed || this.ruleRandom() < 0.45; B.vh = loft ? 6.5 : 3; B.grav = GRAV;
+    B.state = 'flight'; B.live = true; B.pending = null; B.deflected = true; B.defSide = f.side; B.type = 'normal'; B.power = false;
+    B.target = this.nearestFoe(B); this.noticeThrow(B);
     f.set('block'); this.hitstop = 4; this.spark(B.x, B.h, B.z, 1.2); this.pop(f, 'BLOCK!', f.team === 0 ? 'gold' : 'lime'); this.sfx.hit(false);
     if (f.team === 0) { this.stats.blocks++; this.addScore(60); }
   }
   doCatch(f, B, clean) {
-    if (f.team === 0) this.cheer(f.key);
     const thrower = B.thrower;
+    if (thrower && thrower.team === f.team) { this.give(f, B); B.cleared = true; f.set('catch'); this.sfx.catch(); this.pop(f, 'SECURED', 'small ' + (f.team === 0 ? 'gold sh0' : 'lime sh1')); return; }
+    if (f.team === 0) this.cheer(f.key);
     if (B.pop && B.pop.team === f.team) this.resolvePop(B, f);
     this.give(f, B); B.squash = 1; B.cleared = true;
     f.set(clean ? 'catch' : 'bobble');
@@ -2972,7 +3036,7 @@ class Game {
     // the first teammate in the outline comes back in
     const q = this.queue[f.team];
     if (q.length) {
-      const r = q.shift(); r.role = 'returning'; r.backF = 0; r.set('walk');
+      const r = q.shift(); r.role = 'returning'; r.backF = 0; r.h = 0; r.vh = r.vx = r.vz = 0; r.popScale = 1; r.knock = null; r.shake = 0; r.set('walk');
       this.popBrush('CATCH!', `${r.name} ${r.num} BACK IN`, f.team === 0 ? '' : 'lime');
       if (f.team === 0) this.stats.backIn++;
       this.layoutQueue(f.team);
@@ -3049,6 +3113,8 @@ class Game {
   eliminate(a, why, dir) {
     if (a.role !== 'in') return;
     if (a.held) { const b = a.held; a.held = null; b.holder = null; b.state = 'loose'; b.live = false; b.vh = 4; b.vx = (dir || -a.side) * 1.5; b.vz = (Math.random() - 0.5) * 2; b.cleared = true; }
+    // the outline slot is reserved at elimination (FIFO), whatever each exit animation takes; a catch can return a player still leaving
+    a.outOrder = ++this.outSequence; this.queue[a.team].push(a); this.layoutQueue(a.team);
     a.role = 'gone'; a.oob = 0; a.ai.press = -1; a.ai.claimBall = null; this.sfx.whistle();
     dir = dir || -a.side;
     if (why === 'power') { a.knock = {}; a.vx = dir * 7; a.vz = (Math.random() - 0.5) * 2; a.vh = 6; a.h = 0.05; a.set('knock'); }
@@ -3081,7 +3147,7 @@ class Game {
     if (a.st > 36 && a.st <= 44) a.popScale = Math.max(0, 1 - (a.st - 36) / 8);
     if (a.st === 50) {
       // join the outline queue in order of arrival, on the far side line beside our half
-      this.queue[a.team].push(a); a.role = 'outline'; a.h = 0; a.popScale = 1; a.vx = a.vz = 0;
+      a.role = 'outline'; a.h = 0; a.popScale = 1; a.vx = a.vz = 0;
       this.layoutQueue(a.team);
       a.x = a.qx; a.z = a.qz - 0.8; a.set('walkin'); this.burst(a.x, 1, a.z, '#ffffff', 8);
       this.renderLive();
@@ -3108,10 +3174,9 @@ class Game {
     // attack line clearing
     for (const b of this.balls) if (b.state === 'held' && !b.cleared && b.holder.x * b.holder.side >= ATK) { b.cleared = true; if (b.holder === this.user) this.pop(b.holder, 'CLEARED', 'small cyan'); }
     // player violations: center line after the rush, side lines
-    const u = this.user;
-    if (u && u.role === 'in' && u.oob === 0) {
-      if (this.rushT >= RULES.rushF && u.x * u.side < -0.05) { this.eliminate(u, 'line'); this.popCenter('CENTER LINE: OUT', 'big red', 0.36); }
-      else if (Math.abs(u.z) > HZ + 0.2 && Math.abs(u.x) < HX) { this.eliminate(u, 'side'); this.popCenter('SIDE LINE: OUT', 'big red', 0.36); }
+    for (const a of this.all) if (a.active && a.role === 'in' && a.oob === 0) {
+      if (this.rushT >= RULES.rushF && a.x * a.side < -0.05) { this.eliminate(a, 'line'); if (a === this.user) this.popCenter('CENTER LINE: OUT', 'big red', 0.36); }
+      else if (Math.abs(a.z) > HZ + 0.2 && Math.abs(a.x) < HX) { this.eliminate(a, 'side'); if (a === this.user) this.popCenter('SIDE LINE: OUT', 'big red', 0.36); }
     }
     // ball control countdown: 3 of 5 held by one team
     const held = [0, 0]; for (const b of this.balls) if (b.state === 'held') held[b.holder.team]++;
@@ -3250,10 +3315,14 @@ class Game {
     this.$.q0.innerHTML = this.queue[0].length ? 'Outline: ' + q(0) : ''; this.$.q1.innerHTML = this.queue[1].length ? 'Outline: ' + q(1) : '';
   }
   tutorialTick() {
-    const u = this.user; if (this.tutDone || this.phase !== 'play' || !u || !u.held || !u.held.cleared || u.role !== 'in') return;
-    let seen = false; try { seen = sessionStorage.getItem('fbg-tut-dash') === '1'; } catch (e) { } if (seen) { this.tutDone = true; return; }
-    this.tutDone = true; try { sessionStorage.setItem('fbg-tut-dash', '1'); } catch (e) { }
-    const touch = this.root.classList.contains('has-touch');
+    // first rally teaches one exchange: catch the incoming throw, then throw back, then the dash power window
+    const u = this.user; if (this.phase !== 'play' || !u || u.role !== 'in') return;
+    const touch = this.root.classList.contains('has-touch'), seen = (k) => { try { return sessionStorage.getItem(k) === '1'; } catch (e) { return false; } }, mark = (k) => { try { sessionStorage.setItem(k, '1'); } catch (e) { } };
+    if (!this.tutCatch && !seen('fbg-tut-catch') && !u.held && this._kInc) { this.tutCatch = true; mark('fbg-tut-catch'); this.popBrush('CATCH IT', touch ? 'tap CATCH right before it hits you' : 'press K or right click right before it hits you', '', 0.62, 1.8); }
+    if (this.tutCatch && !this.tutThrow && !seen('fbg-tut-throw') && u.held && u.held.cleared && this.stats.catches > 0) { this.tutThrow = true; mark('fbg-tut-throw'); this.popBrush('NOW THROW IT BACK', touch ? 'tap THROW: they are out of position' : 'press J or left click: they are out of position', '', 0.62, 1.8); return; }
+    if (this.tutDone || !u.held || !u.held.cleared) return;
+    if (seen('fbg-tut-dash')) { this.tutDone = true; return; }
+    this.tutDone = true; mark('fbg-tut-dash');
     this.popBrush('DASH, THEN THROW', touch ? 'hold DASH, throw on steps 4 to 7' : 'hold U, throw on steps 4 to 7', '', 0.62, 2.4);
   }
   updateHUD(force) {
@@ -3261,7 +3330,7 @@ class Game {
     const c = this.ot ? this.otClock : this.clock; const txt = this.sudden ? 'SD' : fmtClock(Math.max(0, Math.ceil(c)));
     if (force || this.$.clock.textContent !== txt) this.$.clock.textContent = txt;
     this.$.clock.classList.toggle('fever', this.ot || c <= 10);
-    const sub = this.sudden ? 'SUDDEN DEATH' : (this.ot ? 'OVERTIME' : (this.phase === 'title' ? '3 MINUTES' : 'GAME ' + this.gameNo));
+    const sub = this.phase === 'handshake' ? 'SPORTSMANSHIP' : this.sudden ? 'SUDDEN DEATH' : (this.ot ? 'OVERTIME' : (this.phase === 'title' ? '3 MINUTES' : 'GAME ' + this.gameNo));
     if (this.$.sub.textContent !== sub) this.$.sub.textContent = sub;
     if (this.$.g0.textContent !== String(this.points[0])) this.$.g0.textContent = this.points[0];
     if (this.$.g1.textContent !== String(this.points[1])) this.$.g1.textContent = this.points[1];
