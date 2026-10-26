@@ -739,3 +739,8 @@ html.fbg-lock, html.fbg-lock body{overflow:hidden}
   .fbg-root .fbg-card:has(.fbg-lineup) > p { margin-bottom: 6px; font-size: 13px }
   .fbg-root .fbg-card:has(.fbg-lineup) .fbg-lineup h3 { margin: 4px 0 }
 }
+/* Gordon 10/26: DASH moves into the right-thumb cluster (left of PASS, above CATCH); flick-to-dash on the pad stays */
+.fbg-root.is-mobile .fbg-touch > .fbg-tb.dash, .fbg-root.is-mobile.is-narrow .fbg-touch > .fbg-tb.dash{left:auto; right:calc(172px + var(--sr)); bottom:calc(90px + var(--sb)); width:56px; height:56px; font-size:12px}
+.fbg-root.is-mobile.is-narrow .fbg-touch > .fbg-tb.dash{bottom:calc(84px + var(--sb))}
+/* portrait (narrow): DASH sits above JUMP so it stays on the right half of the screen, clear of the move pad */
+.fbg-root.is-mobile.is-narrow .fbg-touch > .fbg-tb.dash{right:calc(22px + var(--sr)); bottom:calc(178px + var(--sb))}

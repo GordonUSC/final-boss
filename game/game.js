@@ -1050,7 +1050,8 @@ class Game {
   }
   resize() {
     const w = this.root.clientWidth;
-    const narrow = w < 700;
+    // small landscape phones (iPhone SE 667x375) keep the wide 16:9 layout: narrow means a narrow AND tall view, not every view under 700 px
+    const narrow = w < 700 && !((window.innerWidth || 0) > (window.innerHeight || 0) * 1.2);
     this.root.classList.toggle('is-short', Math.min(this.root.clientHeight || 999, window.innerHeight || 999) < 680 && !narrow);
     this.root.classList.toggle('is-narrow', narrow); this.root.classList.toggle('is-wide', !narrow);
     const st = this.$.stage; const W = st.clientWidth, H = st.clientHeight; if (!W || !H) return;
@@ -1281,7 +1282,7 @@ class Game {
       if (this.phase === 'handshake') { if (k === 'enter' || k === 'throw' || k === 'pause') this.finishHandshake(); e.preventDefault(); return; }
       // in full window, Esc on the title or results card goes back to the page
       if (!inGame && k === 'pause' && this.full) { this.setFull(false); e.preventDefault(); return; }
-      if (!inGame) { if (k === 'enter' && this.phase === 'title' && document.activeElement === this.$.stage) { this.start(); e.preventDefault(); } return; }
+      if (!inGame) { if (k === 'enter' && this.phase === 'title' && document.activeElement === this.$.stage && !this.picking) { if (this.wkView) this.startWeekendMatch(); else this.showBracket(); e.preventDefault(); } return; }
       if (k === 'pause') { this.paused ? this.resume() : this.pause(); e.preventDefault(); return; }
       if (this.paused) return;
       e.preventDefault();
@@ -2093,11 +2094,12 @@ class Game {
       </details>
       <ol class="fbg-how">${how}</ol>
       <div class="fbg-lineup"><h3>PICK YOUR PLAYER</h3><div class="fbg-pool"></div></div>
-      ${this.settingsHTML()}<div class="fbg-row"><button class="fbg-btn fbg-go" type="button">PLAY</button><button class="fbg-btn fbg-wkb" type="button">${(() => { const w = wkLoad(); return w && !w.done && w.fb.length ? 'CONTINUE WEEKEND' : 'SIN CITY WEEKEND'; })()}</button><button class="fbg-btn ghost fbg-snd" type="button">${this.sfx.on ? 'Sound on' : 'Sound off'}</button></div>
-      <p class="fbg-wkp">Quick match: one match against THE GLITCHES. Sin City Weekend: Saturday pools, then Sunday double elimination against 16 fabulous teams.</p>`;
+      ${this.settingsHTML()}<div class="fbg-row"><button class="fbg-btn fbg-go fbg-wkb" type="button">${(() => { const w = wkLoad(); return w && !w.done && w.fb.length ? 'CONTINUE WEEKEND' : 'SIN CITY WEEKEND'; })()}</button><button class="fbg-btn ghost fbg-quick" type="button">Quick match</button><button class="fbg-btn ghost fbg-snd" type="button">${this.sfx.on ? 'Sound on' : 'Sound off'}</button></div>
+      <p class="fbg-wkp">Sin City Weekend: Saturday pools, then Sunday double elimination against 16 fabulous teams. Quick match: one match against THE GLITCHES.</p>`;
     this.renderPicker(); this.syncMenu(); this.bindEdChip('title');
-    this.$.card.querySelector('.fbg-go').addEventListener('click', () => { this.wkMatch = null; this.start(); });
+    // Gordon 10/26: Sin City Weekend is the default; a quick match is one tap away
     this.$.card.querySelector('.fbg-wkb').addEventListener('click', () => { this.sfx.ui('select'); this.showBracket(); });
+    this.$.card.querySelector('.fbg-quick').addEventListener('click', () => { this.wkMatch = null; this.start(); });
     this.$.card.querySelector('.fbg-snd').addEventListener('click', () => this.toggleSound());
     this.$.ov.hidden = false;
   }
