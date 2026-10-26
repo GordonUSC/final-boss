@@ -745,3 +745,6 @@ html.fbg-lock, html.fbg-lock body{overflow:hidden}
 /* portrait (narrow): DASH sits above JUMP so it stays on the right half of the screen, clear of the move pad */
 .fbg-root.is-mobile.is-narrow .fbg-touch > .fbg-tb.dash{right:calc(22px + var(--sr)); bottom:calc(178px + var(--sb))}
 .fbg-btn.fbg-go.fbg-wkb{background:var(--fbg-gold); color:#120818; box-shadow:none}
+/* SWITCH never sits over your own half of the court (where the star is): it joins the right-thumb cluster, above DASH in landscape, beside DASH in portrait */
+.fbg-root.is-mobile.has-touch .fbg-touch > .fbg-tb.sw{left:auto; right:calc(172px + var(--sr)); bottom:calc(158px + var(--sb)); width:56px; height:40px; font-size:10px}
+.fbg-root.is-mobile.has-touch.is-narrow .fbg-touch > .fbg-tb.sw{right:calc(92px + var(--sr)); bottom:calc(186px + var(--sb))}
