@@ -335,9 +335,21 @@ body[data-mode="vc"] #play{background:linear-gradient(180deg,#120a2e 0%,#2a0f52 
 .overlay p{max-width:40ch}
 
 /* 07 player nine */
-#nine{background:var(--gold);color:var(--ongold)}
-body[data-mode="vc"] #nine{background:linear-gradient(180deg,#ffb36b,#ff6ec7);color:#2a0f52}
-#nine h2{font-size:clamp(64px,11vw,160px);transform:skewX(var(--skew))}
+#join{background:var(--gold);color:var(--ongold)}
+body[data-mode="vc"] #join{background:linear-gradient(180deg,#ffb36b,#ff6ec7);color:#2a0f52}
+#join h2{font-size:clamp(52px,9vw,140px);transform:skewX(var(--skew))}
+#join a:not(.btn){color:inherit;text-decoration-thickness:2px;text-underline-offset:3px}
+.joinfacts{display:grid;gap:12px;margin:22px 0 0;max-width:62ch}
+.joinfacts div{display:grid;grid-template-columns:7.5em 1fr;gap:12px;align-items:baseline}
+.joinfacts dt{font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.joinfacts dd{margin:0;line-height:1.45}
+.jh{margin:28px 0 10px;font-size:clamp(26px,3.4vw,38px);transform:skewX(var(--skew))}
+.joinsteps{margin:0;padding-left:1.4em;display:grid;gap:10px;max-width:62ch;line-height:1.45}
+.joincta{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+#join .btn{background:var(--void);color:var(--bone)}
+#join .btn.ghost{background:transparent;color:var(--ongold);box-shadow:inset 0 0 0 2px var(--ongold)}
+body[data-mode="vc"] #join .btn.ghost{color:#2a0f52;box-shadow:inset 0 0 0 2px #2a0f52}
+@media (max-width:640px){.joinfacts div{grid-template-columns:1fr;gap:2px}}
 .ninegrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(18px,4vw,60px);align-items:end}
 .letter{font-size:clamp(18px,2vw,22px);max-width:40ch}
 .letter p:first-child{font-weight:700}
@@ -370,7 +382,7 @@ body[data-mode="vc"] .dock{clip-path:none;border-radius:6px;box-shadow:inset 0 0
 .hot u{position:absolute;right:1px;bottom:0;text-decoration:none;font:700 11px/1 var(--ui);color:var(--bone);text-shadow:0 1px 2px #000}
 .hot[aria-checked="true"]{background:var(--red);box-shadow:0 0 0 2px var(--gold);transform:translateY(-3px)}
 .hot:hover{background:#ffffff26}
-/* Alan's Secret Button: a real arcade button */
+/* Secret Button: a real arcade button */
 .alan{position:fixed;right:14px;bottom:14px;z-index:51;display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;cursor:pointer;color:var(--bone)}
 .alan .plaque{display:grid;text-align:right;line-height:1.05;background:#000c;padding:8px 10px;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px);box-shadow:inset 0 0 0 2px #ff6ec7}
 .alan .plaque b{font:400 22px/1 'Yellowtail',cursive;color:#ff9be0;text-shadow:0 0 8px #ff6ec7}
@@ -466,7 +478,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
     <path d="M1150 300 C1148 250 1142 214 1128 180 l6-2 C1150 212 1158 250 1162 300Z"/><path d="M1130 178c22-20 52-24 76-12-26 0-48 6-68 22zM1130 178c-18-22-48-28-74-18 26 0 50 8 66 26zM1130 178c4-28 26-46 54-50-24 10-40 28-46 54z"/>
     <rect x="0" y="292" width="1200" height="8"/></g></svg>
   <ul class="tabs" aria-label="Sections">
-    <li><a href="#vs"><span>Fight</span></a></li><li><a href="#select"><span>Roster</span></a></li><li><a href="#kit"><span>Kit</span></a></li><li><a href="#gear"><span>Gear</span></a></li><li><a href="#play"><span>Play</span></a></li><li><a href="#nine"><span>Slot 9</span></a></li><li class="guide"><a href="brand-guide.html"><span>Logo and name guide</span></a></li>
+    <li><a href="#vs"><span>Fight</span></a></li><li><a href="#join"><span>Join</span></a></li><li><a href="#select"><span>Team</span></a></li><li><a href="#play"><span>Play</span></a></li><li><a href="#kit"><span>Kit</span></a></li><li><a href="#gear"><span>Gear</span></a></li><li class="guide"><a href="brand-guide.html"><span>Logo and name guide</span></a></li>
   </ul>
   <div class="startgrid">
     <div class="intro">
@@ -475,9 +487,9 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
       <p class="vcword vc-only" aria-hidden="true">VICE</p>
       <div class="bossbar late" role="img" aria-label="Boss health bar, full"><i></i></div>
       <div class="barlabel late"><span>Mixed No-Sting</span><b>Sin City Classic 2027</b></div>
-      <p class="lede late" data-vc="Same eight fighters, a pastel night on the water, and a jersey for every one of them. Pick a look from the dock below.">Eight fighters from across the USA, three who have played for Team USA, one open slot. Pick a kit from the dock below, then pick a fighter.</p>
+      <p class="lede late" data-vc="Same team, a pastel night on the water, and an open slot for you. Pick a look from the dock below.">A Mixed No-Sting dodgeball team headed to the Sin City Classic in Las Vegas, January 15 to 17, 2027, coached by Nina Fiore of the US Women's National Team. New players welcome: there's an open slot for you.</p>
       <div class="cta late">
-        <a class="btn" href="#select"><span class="blink">PRESS START</span></a>
+        <a class="btn" href="#join"><span class="blink">PRESS START</span></a>
         <button class="btn ghost" id="announce" type="button" aria-pressed="false">Hear the announcer</button>
         <audio id="vo" src="assets/announcer.mp3" preload="none"></audio>
       </div>
@@ -497,7 +509,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
   <p class="dockline" aria-live="polite"><b id="dock-rank">1</b><span id="dock-name">Phase Two</span><i id="dock-score">95</i></p>
   <div class="hotbar" id="hotbar" role="radiogroup" aria-label="Kit look, ranked. Keys 1 to 0, or left and right arrows."></div>
 </nav>
-<button class="alan" id="alan" type="button" aria-pressed="false"><span class="plaque"><b>Alan's Secret Button</b><span id="alan-sub">Press for Vice</span></span><span class="bezel"><span class="cap"></span></span></button>
+<button class="alan" id="alan" type="button" aria-pressed="false"><span class="plaque"><b>Secret Button</b><span id="alan-sub">Press for Vice</span></span><span class="bezel"><span class="cap"></span></span></button>
 </div>
 
 <!-- 02 VERSUS -->
@@ -505,16 +517,17 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
   <div class="side us">
     <img class="vsimg on" id="vs-a" src="assets/hero.jpg" alt="" width="1920" height="1080"><img class="vsimg" id="vs-b" src="" alt="" aria-hidden="true" width="1920" height="1080">
     <h2>FINAL BOSS</h2>
-    <p class="bill">From across the USA. Players who have played for Team USA. Captain Gordon Bellamy, #4.</p>
+    <p class="bill">From across the USA. Coached by Nina Fiore of the US Women's National Team. Captain Gordon Bellamy, #4.</p>
   </div>
   <div class="vsmark" aria-hidden="true">VS</div>
   <div class="side them">
     <h2>SIN CITY 2027</h2>
     <ul class="stage">
-      <li><b>Stage</b> Las Vegas</li>
+      <li><b>Stage</b> Las Vegas, UNLV</li>
+      <li><b>Check-in</b> Friday, Jan 15, kick-off party</li>
       <li><b>Pool play</b> Saturday, Jan 16, 11 am</li>
-      <li><b>Playoffs</b> Sunday, Jan 17</li>
-      <li><b>Ball</b> Mixed No-Sting</li>
+      <li><b>Playoffs</b> Sunday, Jan 17, 12:30 pm</li>
+      <li><b>Ball</b> No-Sting, mixed teams</li>
     </ul>
     <div class="count" id="count" aria-live="off" aria-label="Countdown to Saturday, January 16, 2027, 11 am Pacific">
       <div><b data-u="d">--</b><span>days</span></div><div><b data-u="h">--</b><span>hours</span></div><div><b data-u="m">--</b><span>min</span></div><div><b data-u="s">--</b><span>sec</span></div>
@@ -522,11 +535,38 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
   </div>
 </section>
 
+<!-- 03 JOIN -->
+<section id="join" class="screen slab" aria-labelledby="t-join">
+  <div class="ninegrid">
+    <div>
+      <h2 id="t-join" data-vc="Room for You">PLAYER SELECT: YOU</h2>
+      <div class="letter">
+        <p>New to dodgeball? Good. FINAL BOSS is recruiting for the Mixed No-Sting division at Sin City Dodgeball, part of the 20th Sin City Classic, the largest LGBTQ+ sporting event in the world. No experience required: our best players started with the No-Sting ball too.</p>
+      </div>
+      <dl class="joinfacts">
+        <div><dt>The game</dt><dd>Mixed teams and soft no-sting balls. Catching is the heart of it: a clean catch puts the thrower out and brings a teammate back in. Rules: <a href="https://wehododgeball.com/rules">wehododgeball.com/rules</a>.</dd></div>
+        <div><dt>The weekend</dt><dd>Friday, Jan 15: player check-in and kick-off party (recommended, not required). Saturday, Jan 16: pool play from 11 am. Sunday, Jan 17: double elimination from 12:30 pm, done by about 5 pm.</dd></div>
+        <div><dt>Where</dt><dd>UNLV Student Recreation and Wellness Center, about five minutes from the host hotel, Horseshoe Las Vegas. Hotel booking: <a href="https://www.sincityclassic.org/hotels">sincityclassic.org/hotels</a>.</dd></div>
+        <div><dt>Coaching</dt><dd>Coach Nina Fiore, gold and bronze with the US Women's National Team. First-timers get a training plan, like Matt's <a href="https://gordonusc.github.io/matt-kramer/">Bullpen to Battlefield</a> camp.</dd></div>
+        <div><dt>Cost</dt><dd>$95 plus a processing fee to register. Travel and hotel are on each player.</dd></div>
+      </dl>
+      <h3 class="jh">How to join</h3>
+      <ol class="joinsteps">
+        <li><b>Tell Gordon you're in.</b> Message him on Instagram or Facebook, or email gbellamy@gmail.com.</li>
+        <li><b>Register yourself</b> at <a href="https://wehododgeball.com/sincity">wehododgeball.com/sincity</a>: choose Mixed No-Sting, join the team "AAAA Final Boss", and sign your own waiver. Every player registers personally; Gordon can't do it for you.</li>
+        <li><b>Do it by Sunday, November 1, 2026.</b> The team needs 8 players registered by then to keep its spot. November 1 is also the last day for refunds, less fees.</li>
+      </ol>
+      <p class="joincta"><a class="btn" href="https://wehododgeball.com/sincity">Register at WeHo Dodgeball</a> <a class="btn ghost" href="#play">Play as you first</a></p>
+    </div>
+    <figure class="story"><img src="assets/canva-story.jpg" alt="FINAL BOSS hype card: a boss health bar, Sin City Classic 2027, Mixed No-Sting, Las Vegas, and Player 9: your slot is open." width="540" height="960" loading="lazy"></figure>
+  </div>
+</section>
+
 <!-- 03 CHARACTER SELECT -->
 <section id="select" class="screen slab-r" aria-labelledby="t-select">
   <div class="head">
-    <h2 id="t-select" data-vc="Meet the Crew">SELECT YOUR FIGHTER</h2>
-    <p>Every jersey back wears the kit you picked. Sources sit at the bottom of the page.</p>
+    <h2 id="t-select" data-vc="Meet the Crew">MEET THE TEAM</h2>
+    <p>Our coach, our players, and the open slot. Pick anyone to play as them in Boss Rush. Every jersey back wears the kit you picked, and sources sit at the bottom of the page.</p>
   </div>
   <p id="player-choice-status" class="src" role="status"></p>
   <div class="selectwrap">
@@ -536,7 +576,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
       <article class="card" data-id="nina" data-name="FIORE" data-no="1" data-perk="Catch window 40% wider (Clutch Catch)">
         <div>
           <h3>Nina Fiore</h3>
-          <p class="role">#1. US Women's National Team. Now its coach.</p>
+          <p class="role">Coach, #1. Gold and bronze with the US Women's National Team, and now its coach. She may also play; she'll know in December.</p>
           <p class="ns">Started in No Sting</p>
           <p class="move"><span>SPECIAL: CLUTCH CATCH</span></p>
           <ul>
@@ -544,21 +584,6 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
             <li>"One of the best catchers in all of dodgeball."</li>
           </ul>
           <p class="src">Sources: Boise State lecture series, 2026; Dodgeball Tribune, 2018.</p>
-        </div>
-        <div class="back" data-back></div>
-      </article>
-
-      <article class="card" data-id="flo" data-name="ZABOKRITSKY" data-no="2" data-perk="Catch +25%, throw +15% (Catch and Answer)">
-        <div>
-          <h3>Flo Zabokritsky</h3>
-          <p class="role">#2. Nina's US Women's teammate.</p>
-          <p class="ns">Started in No Sting</p>
-          <p class="move"><span>SPECIAL: CATCH AND ANSWER</span></p>
-          <ul>
-            <li>Top 20 woman in the East Region, 2018.</li>
-            <li>"A big catcher, but has an arm when she needs it."</li>
-          </ul>
-          <p class="src">Sources: Dodgeball Tribune, Jan 1 2018; Gordon.</p>
         </div>
         <div class="back" data-back></div>
       </article>
@@ -623,7 +648,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
       <article class="card" data-id="matt" data-name="KRAMER" data-no="31" data-perk="Throws 25% faster (Heater)">
         <div>
           <h3>Matt Kramer</h3>
-          <p class="role">#31. Catcher, then pro pitcher, now dodgeballer.</p>
+          <p class="role">#31. Catcher, then pro pitcher, now dodgeballer. His first Sin City.</p>
           <p class="move"><span>SPECIAL: HEATER</span></p>
           <ul>
             <li>Signed as a catcher, converted to a pitcher.</li>
@@ -638,7 +663,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
       <article class="card" data-id="andrew" data-name="KETCHUM" data-no="83" data-perk="Throws 40% faster (The Hammer)">
         <div>
           <h3>Andrew Ketchum</h3>
-          <p class="role">#83. Team USA gold, 2015. Matt Kramer's mentor.</p>
+          <p class="role">#83. The #1 cloth dodgeball player in the world, headed to Worlds. Team USA gold, 2015, and Matt Kramer's mentor.</p>
           <p class="ns">Started in No Sting</p>
           <p class="move"><span>SPECIAL: THE HAMMER</span></p>
           <ul>
@@ -650,17 +675,51 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
         <div class="back" data-back></div>
       </article>
 
-      <article class="card open" data-id="nine" data-name="YOU" data-no="9" data-perk="Mystery perk">
+      <article class="card open" data-id="nine" data-name="YOU" data-no="?" data-perk="Your name and number on the back">
         <div>
-          <h3>Player 9</h3>
-          <p class="role">Slot open. Jersey waiting.</p>
-          <p class="move"><span>SPECIAL: ???</span></p>
-          <p><a href="#nine">Read the invitation</a></p>
+          <h3>Your slot</h3>
+          <p class="role">Open. Jersey waiting.</p>
+          <p class="move"><span>SPECIAL: TO BE DISCOVERED ON COURT</span></p>
+          <p>Pick YOU in Boss Rush and put your own name and number on the back. Ready for real? <a href="#join">Here's how to join</a>.</p>
         </div>
         <div class="back" data-back></div>
       </article>
     </div>
   </div>
+</section>
+
+<!-- 06 PLAY -->
+<section id="play" class="screen slab-r" aria-labelledby="t-play">
+  <div class="grid-floor vc-only" aria-hidden="true"></div>
+  <div class="playhead head">
+    <h2 id="t-play" data-vc="Boss Rush">BOSS RUSH</h2>
+    <p>Picture yourself on our court. Pick YOU, put your name and number on the back, then catch to put the thrower out and throw to win the round. Your kit pick dresses the court.</p>
+  </div>
+  <div class="gamemount" id="fbgame"><p class="loading">Loading the arena...</p></div>
+  <div class="arena" id="fallback" hidden>
+    <div class="hud" aria-live="polite">
+      <span>Playing as <b id="hud-who">BELLAMY</b></span>
+      <span>Score <b id="hud-score">0</b></span>
+      <span>Mult <b id="hud-mult">x1</b></span>
+      <span>Balls <b id="hud-ammo">1</b></span>
+      <span>Wave <b id="hud-wave">1</b></span>
+      <button class="toggle" id="sfx" type="button" aria-pressed="false">Sound off</button>
+    </div>
+    <div class="stagewrap"><canvas id="game" width="960" height="600" aria-label="Boss Rush dodgeball game. Use the keyboard or the on-screen buttons." tabindex="0"></canvas>
+    <div class="overlay" id="ov">
+      <h3 id="ov-h">READY?</h3>
+      <p id="ov-p">Left and Right to dodge. Space to catch when a ball reaches your ring. Up to throw. A catch puts the thrower out and gives you a ball.</p>
+      <button class="btn" id="ov-go" type="button">PLAY</button>
+    </div></div>
+    <div class="pad" aria-label="Touch controls">
+      <button type="button" data-k="left" aria-label="Move left">&larr;</button>
+      <button type="button" data-k="right" aria-label="Move right">&rarr;</button>
+      <button type="button" class="c" data-k="catch">CATCH</button>
+      <button type="button" class="t" data-k="throw">THROW</button>
+    </div>
+    <p class="keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> move. <kbd>Space</kbd> catch. <kbd>&uarr;</kbd> or <kbd>W</kbd> throw. <kbd>P</kbd> pause. <kbd>R</kbd> restart. Perks are just for fun, not real stats.</p>
+  </div>
+  <noscript><p>The game needs JavaScript. Everything else in this file reads fine without it.</p></noscript>
 </section>
 
 <!-- 04 THE KIT -->
@@ -685,7 +744,7 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
       <div class="inside">
         <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 35 C6 25 3 18 3 12a8 8 0 0 1 17-3 8 8 0 0 1 17 3c0 6-3 13-17 23z" fill="#1b1420"/></svg>
         <q id="kit-inside">ONE MORE LIFE. CHOSEN FAMILY.</q>
-        <p class="names">GORDON ANDREW MATT MARK WERTEN NINA FLO CASEY</p>
+        <p class="names">GORDON ANDREW MATT MARK WERTEN NINA CASEY AND YOU</p>
         <p class="callie"><b>Inside, over the heart.</b> Awaits Callie's OK at KBS.</p>
       </div>
       <figure class="score" aria-labelledby="score-cap">
@@ -728,57 +787,6 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
   <p class="fine">KBS list prices, read Oct 5. Full kit = both jerseys, shorts, socks and headband. Jerseys only = the Day One and Playoff pair in any cut. Team-store jerseys can run $5 to $15 more. Shipping and tax not included.</p>
 </section>
 
-<!-- 06 PLAY -->
-<section id="play" class="screen slab-r" aria-labelledby="t-play">
-  <div class="grid-floor vc-only" aria-hidden="true"></div>
-  <div class="playhead head">
-    <h2 id="t-play" data-vc="Boss Rush">BOSS RUSH</h2>
-    <p>Catch to put the thrower out. Throw to win the round. Your kit pick dresses the court.</p>
-  </div>
-  <div class="gamemount" id="fbgame"><p class="loading">Loading the arena...</p></div>
-  <div class="arena" id="fallback" hidden>
-    <div class="hud" aria-live="polite">
-      <span>Playing as <b id="hud-who">BELLAMY</b></span>
-      <span>Score <b id="hud-score">0</b></span>
-      <span>Mult <b id="hud-mult">x1</b></span>
-      <span>Balls <b id="hud-ammo">1</b></span>
-      <span>Wave <b id="hud-wave">1</b></span>
-      <button class="toggle" id="sfx" type="button" aria-pressed="false">Sound off</button>
-    </div>
-    <div class="stagewrap"><canvas id="game" width="960" height="600" aria-label="Boss Rush dodgeball game. Use the keyboard or the on-screen buttons." tabindex="0"></canvas>
-    <div class="overlay" id="ov">
-      <h3 id="ov-h">READY?</h3>
-      <p id="ov-p">Left and Right to dodge. Space to catch when a ball reaches your ring. Up to throw. A catch puts the thrower out and gives you a ball.</p>
-      <button class="btn" id="ov-go" type="button">PLAY</button>
-    </div></div>
-    <div class="pad" aria-label="Touch controls">
-      <button type="button" data-k="left" aria-label="Move left">&larr;</button>
-      <button type="button" data-k="right" aria-label="Move right">&rarr;</button>
-      <button type="button" class="c" data-k="catch">CATCH</button>
-      <button type="button" class="t" data-k="throw">THROW</button>
-    </div>
-    <p class="keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> move. <kbd>Space</kbd> catch. <kbd>&uarr;</kbd> or <kbd>W</kbd> throw. <kbd>P</kbd> pause. <kbd>R</kbd> restart. Perks are just for fun, not real stats.</p>
-  </div>
-  <noscript><p>The game needs JavaScript. Everything else in this file reads fine without it.</p></noscript>
-</section>
-
-<!-- 07 PLAYER NINE -->
-<section id="nine" class="screen slab" aria-labelledby="t-nine">
-  <div class="ninegrid">
-    <div>
-      <h2 id="t-nine" data-vc="Room for One More">PLAYER SELECT: SLOT 9</h2>
-      <div class="letter">
-        <p>Alan, there's a jersey with your name on it.</p>
-        <p>FINAL BOSS is eight teammates from across the country: two US Women's catchers, a Team USA arm, a former pro pitcher, family, and a captain who would love to see you on court. No experience required. Our best players started where you would, with the No-Sting ball.</p>
-        <p>One weekend in Las Vegas, January 16 to 17. Say yes and Gordon handles the sign-up.</p>
-      </div>
-      <div class="card9"><b>PLAYER 9.</b> Special move: to be discovered on court. You also have a secret button, bottom right.</div>
-      <p style="margin-top:14px"><a class="btn ghost save" href="assets/canva-story.jpg" download>Save the hype card</a></p>
-    </div>
-    <figure class="story"><img src="assets/canva-story.jpg" alt="FINAL BOSS hype card: a boss health bar, Sin City Classic 2027, Mixed No-Sting, Jan 16 to 17, Las Vegas, and Player 9: your slot is open." width="540" height="960" loading="lazy"></figure>
-  </div>
-</section>
-
 <footer>
   <h2>CREDITS</h2>
   <p class="guideline"><a href="brand-guide.html">Logo and name guide</a></p>
@@ -786,12 +794,11 @@ body[data-mode="vc"] .alan .plaque b{font:700 20px/1 'Teko',sans-serif;color:#ff
   <ol>
     <li>Andrew Ketchum: <a href="https://cronkitenews.azpbs.org/2019/12/16/professional-adult-dodgeball/">Cronkite News, Dec 16 2019</a>; <a href="https://soundcloud.com/thedodgeballpodcast/s4-e-46-team-usa-chat-ft-nate-krieter-and-andrew-ketchum">The Dodgeball Podcast</a>.</li>
     <li>Nina Fiore: <a href="https://events.boisestate.edu/event/film-lecture-series-nina-fiore">Boise State</a>; <a href="https://medium.com/thedodgeballtribune/the-top-30-women-in-us-dodgeball-part-1-35fc89e6197a">Dodgeball Tribune, Top 30 Women</a>; <a href="https://medium.com/thedodgeballtribune/a-look-at-the-ultimate-dodgeball-championship-womens-division-495b026e8de7">Dodgeball Tribune, UDC Women's Division</a>.</li>
-    <li>Flo Zabokritsky: <a href="https://medium.com/thedodgeballtribune/the-top-20-women-in-the-east-region-19e14574ac44">Dodgeball Tribune, Top 20 Women in the East</a>.</li>
     <li>Casey Reed: <a href="https://usadodgeball.com/announcements">USA Dodgeball, March 2023 newsletter</a>.</li>
-    <li>Event: <a href="https://www.sincityclassic.org/sports/dodgeball">Sin City Classic, Dodgeball</a>.</li>
+    <li>Event and schedule: <a href="https://www.sincityclassic.org/sports/dodgeball">Sin City Classic, Dodgeball</a>.</li>
     <li>Prices: <a href="https://www.kbssportsapparel.com/">KBS Sports Apparel (Kickballstuff)</a>, public catalog read Oct 5 2026.</li>
     <li>Boss Rush audio: announcer (David, Sports Arena Announcer voice), crowd and arena sounds made with ElevenLabs; ball hits, bounces and footsteps from <a href="https://kenney.nl/assets/impact-sounds">Kenney Impact Sounds</a> (CC0).</li>
-    <li>"Started in No Sting" for Andrew, Nina, Flo and Casey: Gordon. Werten, Mark and Gordon: the team's own sign-up thread.</li>
+    <li>"Started in No Sting" for Andrew, Nina and Casey: Gordon. Werten, Mark and Gordon: the team's own sign-up thread.</li>
   </ol>
 </footer>
 
@@ -865,14 +872,14 @@ function renderBacks(){
 }
 
 /* ---------- character select ---------- */
-const grid=$('grid9'); let chosen='gordon';
+const grid=$('grid9'); let chosen='nine';
 cards.forEach((c,i)=>{
   const b=document.createElement('button'); b.type='button'; b.className='slot'+(c.classList.contains('open')?' open':'')+(c.dataset.face?' photo':'');
   b.dataset.id=c.dataset.id; b.setAttribute('aria-pressed','false');
   b.setAttribute('aria-label',c.querySelector('h3').textContent+(c.dataset.no&&c.dataset.id!=='nine'?', number '+c.dataset.no:''));
   b.tabIndex=-1;
   const vis=c.dataset.face?`<img src="${c.dataset.face}" alt="" width="300" height="300" loading="lazy">`:`<svg viewBox="0 0 100 100" aria-hidden="true" class="sil"></svg>`;
-  b.innerHTML=`${vis}<span class="no">${c.dataset.id==='nine'?'':c.dataset.no}</span><span class="nm${c.dataset.name.length>8?' long':''}">${c.dataset.id==='nine'?'???':c.dataset.name}</span>`;
+  b.innerHTML=`${vis}<span class="no">${c.dataset.id==='nine'?'?':c.dataset.no}</span><span class="nm${c.dataset.name.length>8?' long':''}">${c.dataset.name}</span>`;
   grid.appendChild(b);
 });
 const slots=[...grid.children];
@@ -881,9 +888,9 @@ function choose(id,focus){
   slots.forEach(s=>{const on=s.dataset.id===id;s.setAttribute('aria-pressed',on);s.tabIndex=on?0:-1;if(on&&focus)s.focus()});
   cards.forEach(c=>c.classList.toggle('on',c.dataset.id===id));
   const c=cards.find(c=>c.dataset.id===id);
-  if(id!=='nine'&&$('hud-who'))$('hud-who').textContent=c.dataset.name;
+  if($('hud-who'))$('hud-who').textContent=c.dataset.name;
   $('player-choice-status').textContent='';
-  if(id!=='nine'&&window.FBGame&&gameMounted){try{
+  if(window.FBGame&&gameMounted){try{
     const phase=FBGame.state()?.phase;FBGame.setPlayer(c.dataset.name);
     $('player-choice-status').textContent=phase&&phase!=='title'?c.dataset.name+' selected for your next match. Your current match continues.':c.dataset.name+' selected for the arena.';
   }catch(e){}}
@@ -892,11 +899,11 @@ function choose(id,focus){
 slots.forEach((s,i)=>{
   s.addEventListener('click',()=>choose(s.dataset.id));
   s.addEventListener('keydown',e=>{
-    let j=i; if(e.key==='ArrowRight')j=(i+1)%9; else if(e.key==='ArrowLeft')j=(i+8)%9; else if(e.key==='ArrowDown')j=(i+3)%9; else if(e.key==='ArrowUp')j=(i+6)%9; else if(e.key==='Home')j=0; else if(e.key==='End')j=8; else return;
+    const n=slots.length; let j=i; if(e.key==='ArrowRight')j=(i+1)%n; else if(e.key==='ArrowLeft')j=(i+n-1)%n; else if(e.key==='ArrowDown')j=Math.min(n-1,i+3); else if(e.key==='ArrowUp')j=Math.max(0,i-3); else if(e.key==='Home')j=0; else if(e.key==='End')j=n-1; else return;
     e.preventDefault(); e.stopPropagation(); choose(slots[j].dataset.id,true);
   });
 });
-cards.forEach(c=>{ if(c.dataset.id==='nine')return; const p=document.createElement('p'); p.className='playas'; p.innerHTML=`<a class="btn" href="#play">PLAY AS ${c.dataset.name}</a> <span class="src">Game perk: ${c.dataset.perk}</span>`; p.querySelector('a').addEventListener('click',()=>choose(c.dataset.id)); c.firstElementChild.appendChild(p)});
+cards.forEach(c=>{ const p=document.createElement('p'); p.className='playas'; p.innerHTML=`<a class="btn" href="#play">PLAY AS ${c.dataset.name}</a> <span class="src">Game perk: ${c.dataset.perk}</span>`; p.querySelector('a').addEventListener('click',()=>choose(c.dataset.id)); c.firstElementChild.appendChild(p)});
 
 /* ---------- gear: KBS items, priced from the published catalog ---------- */
 const KBS='https://www.kbssportsapparel.com/products/';
@@ -1055,7 +1062,7 @@ function setMode(m){
   swaps.forEach(el=>el.innerHTML=m==='vc'?el.dataset.vc:el.dataset.fb);
   const vo=$('vo'); ++announceRequest; vo.pause(); vo.src=m==='vc'?'assets/announcer-vice.mp3':'assets/announcer.mp3'; announceReset();
   $('alan').setAttribute('aria-pressed',m==='vc'); $('alan-sub').textContent=m==='vc'?'Back to FINAL BOSS':'Press for Vice';
-  $('alan').setAttribute('aria-label',"Alan's Secret Button: "+(m==='vc'?'return to FINAL BOSS mode':'switch the page to Vice mode'));
+  $('alan').setAttribute('aria-label',"Secret Button: "+(m==='vc'?'return to FINAL BOSS mode':'switch the page to Vice mode'));
   renderHotbar(); renderLadder();
   setLook(cur[m]);
   if(window.FBGame&&gameMounted){try{FBGame.setMode(m);FBGame.setLook(payload(look))}catch(e){}}
@@ -1277,7 +1284,7 @@ return {running:()=>running&&!paused};
 }
 
 /* ---------- boot ---------- */
-choose('gordon');
+choose('nine');
 setMode(mode);
 window.__dossier={setLook,setMode,state:()=>({mode,look:look.id,cur:Object.assign({},cur),gameMounted,fallbackOn})};
 })();
