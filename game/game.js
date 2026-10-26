@@ -975,7 +975,7 @@ class Game {
   resize() {
     const w = this.root.clientWidth;
     const narrow = w < 700;
-    this.root.classList.toggle('is-short', Math.min(this.root.clientHeight || 999, window.innerHeight || 999) < 560 && !narrow);
+    this.root.classList.toggle('is-short', Math.min(this.root.clientHeight || 999, window.innerHeight || 999) < 680 && !narrow);
     this.root.classList.toggle('is-narrow', narrow); this.root.classList.toggle('is-wide', !narrow);
     const st = this.$.stage; const W = st.clientWidth, H = st.clientHeight; if (!W || !H) return;
     this.W = W; this.H = H;
