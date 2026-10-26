@@ -13,9 +13,11 @@ const PITCH = 27 * DEG;            // spec said 32; lowered to match Gordon's ap
 const SINP = Math.sin(PITCH), COSP = Math.cos(PITCH);
 const DT = 1 / 60;
 const TRAIL_N = 14;               // ball ribbon trail length in ticks
-const HX = 9, HZ = 4.5;            // court half extents (18 x 9 m)
+// court half extents: 18 m long; COURT_W is the one tunable width (Gordon 2026-10-26: "feel a little bit wider"; was 9 m)
+const COURT_W = 10.4;
+const HX = 9, HZ = COURT_W / 2;
 const OUTX = 10.25;                // back outfield lane x
-const SIDEZ = 5.35;                // side outfield lane z
+const SIDEZ = HZ + 0.85;           // side outfield lane z
 const GRAV = 22;
 const CHAR = 1.14;               // chunky Kunio-style scale, tuned so 16 athletes read at once
 const TUNE = {
@@ -68,14 +70,23 @@ const FB_STRENGTH = {
 };
 // opponents are fictional, so their profiles can vary freely; the GLITCH KING stays the strongest player on the floor
 const OPP_STYLES = {
-  glitches: { scout: 'Scrappy and chaotic: big arms, wandering eyes.', base: { aware: 0.6, catch: 0.6, acc: 0.56, power: 0.74, foot: 0.62, comp: 0.54 }, spread: 0.13, sync: 0.16 },
+  glitches: { scout: 'Scrappy and chaotic: big arms, wandering eyes, a few slippery dodgers.', base: { aware: 0.6, catch: 0.6, acc: 0.56, power: 0.74, foot: 0.62, comp: 0.54 }, spread: 0.13, spreadK: { foot: 0.3, aware: 0.2 }, sync: 0.16 },
   catchfirst: { scout: 'Catch-first: patient hands, soft throws.', base: { aware: 0.72, catch: 0.76, acc: 0.6, power: 0.5, foot: 0.62, comp: 0.68 }, spread: 0.07, sync: 0.1 },
   powerarm: { scout: 'Power arms: heat from the back line, and they love a double.', base: { aware: 0.56, catch: 0.5, acc: 0.62, power: 0.86, foot: 0.56, comp: 0.6 }, spread: 0.09, sync: 0.3 },
 };
+// Opponent schema (teams.json). Teams differ by style, strategy weights, ratings and signature abilities, NEVER by rules (every match uses the same real rules):
+//   { name, short, colors[4], emblem, style, intro, tactic: { patience, push, fake, flank, calls, lastBall },
+//     players: [{ key, num, skin, build, shots, rt: { aware, catch, acc, power, foot, comp } }] (7), boss: {...},
+//     abilities: [{ id, kind, amount, tell: { text, sfx } }] }
+// ability kinds act only through existing systems, each with a visible and audible tell so it is readable and counterable:
+//   throwSpeed (faster throws), throwCurve (chance a throw curves), catchWindow (better catch timing and choice), dodgeBias (better footwork),
+//   fakeBait (stronger pump fakes), moveSpeed (quicker feet)
+const ABILITY_KINDS = new Set(['throwSpeed', 'throwCurve', 'catchWindow', 'dodgeBias', 'fakeBait', 'moveSpeed']);
 function oppFrom(o) {
   // a new opponent can come straight from teams.json; THE GLITCHES stay the default and the final boss
   if (!o || !Array.isArray(o.players) || !o.players.length) return BOSS_TEAM;
-  return { name: String(o.name || 'OPPONENT').toUpperCase(), short: String(o.short || o.name || 'OPPONENT').toUpperCase(), colors: o.colors || BOSS_TEAM.colors, emblem: o.emblem || 'pixel', style: o.style || null, intro: o.intro || null,
+  return { name: String(o.name || 'OPPONENT').toUpperCase(), short: String(o.short || o.name || 'OPPONENT').toUpperCase(), colors: o.colors || BOSS_TEAM.colors, emblem: o.emblem || 'pixel', style: o.style || null, intro: o.intro || null, tactic: o.tactic || null,
+    abilities: (Array.isArray(o.abilities) ? o.abilities : []).filter(x => x && ABILITY_KINDS.has(x.kind)).map(x => ({ id: String(x.id || x.kind), kind: x.kind, amount: Math.max(0, Math.min(0.5, +x.amount || 0)), tell: x.tell || { text: String(x.id || x.kind).toUpperCase() } })),
     players: o.players.slice(0, 7).map((p, i) => Object.assign({ num: String(i + 1), skin: '#c99272', build: 1, shots: ['hook', 'hop'] }, p, { key: String(p.key || p.name || 'P' + i).toUpperCase() })),
     boss: Object.assign({ num: '00', skin: '#6f4a8a', build: 1, shots: ['hook', 'zig'] }, o.boss || BOSS_TEAM.boss, { key: String((o.boss && (o.boss.key || o.boss.name)) || BOSS_TEAM.boss.key).toUpperCase() }) };
 }
@@ -665,7 +676,9 @@ class Athlete {
 }
 
 const NOI = { mx: 0, mz: 0, dash: 0, holdRun: false, throw: false, catch: false, catchHeld: false, jump: false, pass: false };
-const LOCKED = new Set(['pump', 'teeter', 'stagger', 'windup', 'release', 'recover', 'catch', 'bobble', 'hitstun', 'knock', 'down', 'getup', 'ko', 'tired', 'squat', 'land', 'walkin', 'drop', 'pwind', 'prel', 'prec', 'block']);
+const DODGE_HIT = { lean: { r: 0.62, top: 1.7 }, dive: { r: 0.95, top: 0.62 }, spin: { r: 0.8, top: 1.9 }, matador: { r: 0.5, top: 1.75 }, getup: { r: 1, top: 0.9 } };
+const DODGES = new Set(['lean', 'dive', 'spin', 'matador']);
+const LOCKED = new Set(['lean', 'dive', 'spin', 'matador', 'getup', 'pump', 'teeter', 'stagger', 'windup', 'release', 'recover', 'catch', 'bobble', 'hitstun', 'knock', 'down', 'getup', 'ko', 'tired', 'squat', 'land', 'walkin', 'drop', 'pwind', 'prel', 'prec', 'block']);
 
 // ---------------------------------------------------------------- editions (PC native and Mobile native are two builds; the picker routes between them)
 const ED_KEY = 'fbg-edition';
@@ -1039,6 +1052,7 @@ class Game {
     // wide screens keep a 16:9 safe frame: on 21:9 or 32:9 the court depth sets the distance, so nothing is cropped top or bottom
     if (v.wide && aspect > 16 / 9) v.d = Math.max(v.d, halfW / (Math.tan(v.fov / 2 * DEG) * (16 / 9)));
     v.tz = v.wide ? -2.3 : -1.4;
+    v.d *= 1 + 0.7 * (HZ - 4.5) / 4.5; v.tz += 0.55 * (HZ - 4.5);   // re-frame for the wider court (COURT_W): pull back and center the extra width
     // desktop HUD type scale: the HUD was drawn for a ~600 px tall stage; in full window it grows with the screen (1080p about 1.45x, 1440p about 1.9x)
     const z = this.full ? Math.max(1, Math.min(2.4, H / 745)) : 1;
     this.root.style.setProperty('--fbg-z', z.toFixed(3));
@@ -1069,7 +1083,7 @@ class Game {
     const court = new THREE.Mesh(new THREE.PlaneGeometry(26, 15), this.courtMat); court.rotation.x = -Math.PI / 2; court.position.y = 0.003; court.receiveShadow = true; S.add(court); this.court = court;
     // pool caustics (Miami night): two scrolling layers, additive
     this.causticTex = causticTexture(); this.causticTex.wrapS = this.causticTex.wrapT = THREE.RepeatWrapping;
-    this.caustics = [0, 1].map(i => { const t = this.causticTex.clone(); t.needsUpdate = true; t.repeat.set(5 + i * 1.3, 3 + i * 0.8); const m = new THREE.Mesh(new THREE.PlaneGeometry(18, 9), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.28, color: '#bff8ff' })); m.rotation.x = -Math.PI / 2; m.position.y = 0.005 + i * 0.001; m.renderOrder = 1; m.visible = false; S.add(m); return m; });
+    this.caustics = [0, 1].map(i => { const t = this.causticTex.clone(); t.needsUpdate = true; t.repeat.set(5 + i * 1.3, 3 + i * 0.8); const m = new THREE.Mesh(new THREE.PlaneGeometry(2 * HX, 2 * HZ), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.28, color: '#bff8ff' })); m.rotation.x = -Math.PI / 2; m.position.y = 0.005 + i * 0.001; m.renderOrder = 1; m.visible = false; S.add(m); return m; });
     this.glowTex = canvasTex(1000, 560, () => { });
     this.glowMat = new THREE.MeshBasicMaterial({ map: this.glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.45 });
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(25, 14), this.glowMat); glow.rotation.x = -Math.PI / 2; glow.position.y = 0.006; glow.renderOrder = 1; S.add(glow); this.glowPlane = glow;
@@ -1130,7 +1144,7 @@ class Game {
     this.decals = [];
     for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ map: this.tex.ring, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); m.rotation.x = -Math.PI / 2; m.renderOrder = 2; m.visible = false; S.add(m); this.decals.push({ m, t: 0, life: 1, s0: 1, s1: 1, a0: 1 }); }
     // readable lines: the center line and both side lines brighten as a player nears them (P0f), never always on
-    this.lineStrips = [[0, 0, 0.16, 9.1], [0, -HZ, 18.2, 0.16], [0, HZ, 18.2, 0.16]].map(([x, z, w, d]) => { const m = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ color: '#fff6dc', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.011, z); m.scale.set(w, d, 1); m.renderOrder = 2; S.add(m); return m; });
+    this.lineStrips = [[0, 0, 0.16, 2 * HZ + 0.1], [0, -HZ, 18.2, 0.16], [0, HZ, 18.2, 0.16]].map(([x, z, w, d]) => { const m = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ color: '#fff6dc', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.011, z); m.scale.set(w, d, 1); m.renderOrder = 2; S.add(m); return m; });
     this.initPost();
     this.resize();
   }
@@ -1367,6 +1381,10 @@ class Game {
       case 'drop': P = this.poseHit(a); k = 0.3; break;
       case 'teeter': P = this.poseTeeter(a); k = 0.5; break;
       case 'pump': P = a.st < 8 ? this.poseWind(a, false) : this.poseHold(a); k = 0.55; break;
+      case 'lean': P = this.poseLean(a); k = t < 3 ? 0.7 : 0.4; break;
+      case 'spin': P = this.poseRun(a); P.twist = Math.sin(t * 0.8) * 0.6; P.lean = 0.25; k = 0.5; break;
+      case 'matador': P = this.poseLean(a); P.sh = [-2.6, 0.9, -2.6, 0.9]; P.twist = 0.7; k = 0.8; break;
+      case 'dive': P = this.poseKnock(a); P.roll = (a.diveDir || 1) * -Math.min(1.3, t * 0.16); P.lean = 0.6; k = 0.5; break;
       case 'stagger': P = this.poseHit(a); k = 0.3; break;
       default: P = this.poseIdle(a);
     }
@@ -1401,6 +1419,7 @@ class Game {
   poseDown(a) { const p = this.bp(a); p.roll = -1.5; p.lean = 0; p.sh = [-2.9, 1.0, -2.9, 1.1]; p.el = [-0.2, -0.2]; p.hp = [-0.1, 0.1]; p.kn = [0.2, 0.4]; p.hipY = -0.62; const b = a.st < 8 ? Math.sin(a.st / 8 * Math.PI) * 0.12 : 0; p.hipY += b; return p; }
   poseGetup(a) { const p = this.bp(a); const f = Math.min(1, a.st / 16); p.roll = -1.5 * (1 - f); p.hipY = -0.62 * (1 - f) - 0.1 * Math.sin(f * Math.PI); p.lean = 0.6 * Math.sin(f * Math.PI); p.kn = [1.4 * (1 - f) + 0.3, 1.2 * (1 - f) + 0.3]; p.hp = [-1.1 * (1 - f), -0.8 * (1 - f)]; p.sh = [0.3, 0.3, 0.3, 0.3]; return p; }
   poseTired(a) { const p = this.bp(a); const t = a.st * 0.18; p.lean = 0.7 + Math.sin(t) * 0.06; p.hipY = -0.12; p.kn = [0.55, 0.55]; p.hp = [-0.5, -0.5]; p.sh = [-0.55, 0.05, -0.55, 0.05]; p.el = [-0.2, -0.2]; p.head = 0.15 + Math.sin(t) * 0.08; if (a.st % 16 === 0) this.sweat(a); return p; }
+  poseLean(a) { const p = this.bp(a); p.lean = -0.55; p.twist = 0.35 * (a.leanDir || 1); p.sh = [-1.9, 0.7, -1.9, 0.7]; p.el = [-0.5, -0.5]; p.kn = [0.8, 0.4]; p.hp = [-0.2, 0.3]; p.hipY = -0.08; p.head = 0.3; return p; }
   poseTeeter(a) { const p = this.bp(a); const t = a.st * 0.55; p.lean = -0.35 + Math.sin(t * 0.5) * 0.1; p.sh = [-2.2 + Math.sin(t) * 0.9, 0.9, -2.2 - Math.sin(t) * 0.9, 0.9]; p.el = [-0.4, -0.4]; p.kn = [0.35, 0.15]; p.hp = [-0.2, 0.25]; p.head = 0.2; return p; }
   poseKO(a) { const p = this.bp(a); p.sh = [-2.2, 1.3, -2.2, 1.3]; p.el = [-0.3, -0.3]; p.kn = [0.6, 0.2]; p.hp = [-0.2, 0.2]; p.lean = -0.2; p.flip = a.st * 0.12; return p; }
   poseBench(a) { const p = this.bp(a); const t = (this.frame + a.num.length * 23) * 0.06; p.hipY = -0.16; p.kn = [0.7, 0.7]; p.hp = [-0.6, -0.6]; p.lean = 0.45; p.sh = [-0.7, 0.1, -0.7, 0.1]; p.el = [-0.5, -0.5]; p.head = -0.2 + Math.sin(t) * 0.05; return p; }
@@ -1762,13 +1781,21 @@ class Game {
       foot.rotation.x = -Math.PI / 2; foot.renderOrder = 1; foot.visible = false; this.scene.add(foot); a.foot = foot;
     }
   }
+  abil(kind, team) { if (team !== 1) return 0; let v = 0; for (const x of (this.opp.abilities || [])) if (x.kind === kind) v += x.amount; return v; }
+  abilityTell(a, kind) {
+    // the tell: a short call-out in the team's color and shape (plus its sound if the team provides one), at most every few seconds
+    const x = (this.opp.abilities || []).find(y => y.kind === kind); if (!x || a.team !== 1) return;
+    this.abilT = this.abilT || {}; if (this.frame < (this.abilT[kind] || 0)) return; this.abilT[kind] = this.frame + 180;
+    this.pop(a, x.tell.text || x.id, 'small lime sh1'); if (x.tell.sfx) this.sfx.smp(x.tell.sfx, 0.8); this.awStat('ability_' + kind);
+  }
   assignRatings() {
     const off = DIFF_OFF[this.opts.difficulty] || 0, st = OPP_STYLES[this.oppStyle] || OPP_STYLES.glitches;
     for (const a of this.teams[0]) { const s = FB_STRENGTH[a.key] || {}; a.rt = Object.assign({}, FB_BASE, s); a.arch = s.arch || 'balanced'; delete a.rt.arch; }
     for (const a of this.teams[1]) {
       if (a.boss) { a.rt = {}; for (const k in BOSS_RT) a.rt[k] = clampR(BOSS_RT[k] + off * 0.5); a.arch = 'boss'; continue; }
       const given = a.def && a.def.rt;
-      const r = {}; for (const k in st.base) r[k] = Math.min(clampR((given && given[k] != null ? given[k] : st.base[k] + (hash01(a.key + k) - 0.5) * 2 * st.spread) + off), BOSS_RT[k] - 0.04);
+      const r = {}; for (const k in st.base) r[k] = Math.min(clampR((given && given[k] != null ? given[k] : st.base[k] + (hash01(a.key + k) - 0.5) * 2 * ((st.spreadK && st.spreadK[k]) || st.spread)) + off), BOSS_RT[k] - 0.04);
+      r.foot = Math.min(BOSS_RT.foot - 0.02, r.foot + this.abil('dodgeBias', 1));
       a.rt = r; a.arch = r.power >= 0.84 ? 'power arm' : (r.catch >= 0.7 ? 'catcher' : 'scrapper');
     }
   }
@@ -1792,7 +1819,7 @@ class Game {
       ps.forEach((a, i) => {
         a.reset(); a.active = true; a.root.visible = true; a.shadow.visible = true; a.role = 'in';
         a.x = a.side * (HX - 0.45); a.z = -HZ + 0.6 + i * ((2 * HZ - 1.2) / (ps.length - 1));
-        a.ai.home = [a.side * (3.8 + (i % 3) * 1.7), Math.max(-3.9, Math.min(3.9, a.z * 0.95))];
+        a.ai.home = [a.side * (3.8 + (i % 3) * 1.7), Math.max(-(HZ - 0.6), Math.min(HZ - 0.6, a.z * 0.95))];
         a.yaw = a.team === 0 ? 100 * DEG : -100 * DEG;
       });
     }
@@ -2226,7 +2253,7 @@ class Game {
     // formation: drift around home, back off when the other side holds more balls
     const foeHeld = this.balls.filter(b => b.holder && b.holder.team !== a.team).length;
     const h = ai.home || [a.side * 5, 0];
-    if (!ai.wander || ai.t % 100 === 0) ai.wander = [h[0] + (Math.random() - 0.5) * 2.2, Math.max(-3.9, Math.min(3.9, h[1] + (Math.random() - 0.5) * 2.4))];
+    if (!ai.wander || ai.t % 100 === 0) ai.wander = [h[0] + (Math.random() - 0.5) * 2.2, Math.max(-(HZ - 0.6), Math.min(HZ - 0.6, h[1] + (Math.random() - 0.5) * 2.4))];
     let tx = ai.wander[0], tz = ai.wander[1];
     if (foeHeld >= 3) tx = a.side * Math.max(Math.abs(tx), 6.2);
     const d = Math.hypot(tx - a.x, tz - a.z);
@@ -2324,7 +2351,7 @@ class Game {
       C.callAt = 0; const h = holders[(Math.random() * n) | 0], W = this.wings(t, h);
       const side = !W.left ? 'right' : !W.right ? 'left' : (Math.abs(W.left.z - h.z) > Math.abs(W.right.z - h.z) ? 'left' : 'right'), caller = W[side];
       if (caller && !caller.held && Math.abs(caller.z - h.z) > 1.5) {
-        this.awStat('plan_call'); this.sfx.smp('ball_' + side + '_' + (1 + ((Math.random() * 3) | 0)), 0.85);
+        this.awStat('plan_call'); this.sfx.smp('ball_' + side + '_' + (1 + ((Math.random() * 3) | 0)), 0.85); this.qaLog('call', { side, team: t });
         this.pop(caller, 'BALL ' + side.toUpperCase() + '!', 'small ' + (t === 0 ? 'gold sh0' : 'lime sh1'));
         if (h === this.user && !this.simAll) this.callSuggest = { to: caller, until: this.frame + 150 };
         else if (this.aiPlays(h) && (!h.ai.plan || h.ai.plan.k !== 'coach')) { h.ai.plan = { k: 'pass', to: caller }; h.ai.t = 0; h.ai.delay = 6; }
@@ -2345,9 +2372,9 @@ class Game {
       for (const m of M) {
         if (m === shooter) continue;
         // pump fake: a windup that stops short; an aware defender who is watching commits early
-        m.ai.plan = null; m.set('pump'); this.awStat('fakes');
+        m.ai.plan = null; m.set('pump'); this.awStat('fakes'); this.qaLog('fake', { team: t });
         const f = foes[(Math.random() * foes.length) | 0]; m.yaw = Math.atan2(f.x - m.x, f.z - m.z);
-        if (this.aiPlays(f) && this.viewOf(f, m.x, m.z) === 1 && Math.random() < 0.85 * (f.rt || FB_BASE).aware && !f.locked()) {
+        if (this.aiPlays(f) && this.viewOf(f, m.x, m.z) === 1 && Math.random() < 0.85 * (f.rt || FB_BASE).aware * (1 + this.abil('fakeBait', t)) && !f.locked()) {
           const chest = Math.random() < 0.5; f.ai.react = { fake: true, B: { state: 'flight' }, aware: true, kind: chest ? 'catch' : 'dodge', at: (this.wf || 0) + 1, impactF: (this.wf || 0) + 16 };
           if (chest) f.ai.press = (this.wf || 0) + 6; baited.push(f); this.awStat('fakeBaited'); this.pop(f, '!', 'tiny ' + (f.team === 0 ? 'gold sh0' : 'lime sh1'));
         }
@@ -2378,7 +2405,7 @@ class Game {
   aiWithBall(a, it) {
     const b = a.held, ai = a.ai;
     if (a.oob > 0) return this.seek(a, it, a.side * (HX - 0.9), Math.max(-3, Math.min(3, a.z)), false);
-    if (!b.cleared) return this.seek(a, it, a.side * (ATK + 1.2), Math.max(-3.8, Math.min(3.8, a.z)), false);
+    if (!b.cleared) return this.seek(a, it, a.side * (ATK + 1.2), Math.max(-(HZ - 0.7), Math.min(HZ - 0.7, a.z)), false);
     const pressure = this.ctlTeam === a.team ? this.ctlT : 0;
     const foeHeld = this.balls.filter(x => x.holder && x.holder.team !== a.team).length;
     if (ai.plan == null && this.liveCount(a.team) === 1 && foeHeld > 0 && pressure < RULES.control * 0.5) { ai.plan = { k: 'bait' }; ai.t = 0; ai.delay = 0; }
@@ -2482,20 +2509,42 @@ class Game {
       else {
         // no-sting balls are very catchable: catch first at chest height, then duck high balls, else sidestep
         const chest = hImp > 0.6 * sc && hImp < 1.5 * sc;
-        let pc = chest ? 0.4 + 0.55 * r.catch : 0.12 + 0.3 * r.catch; if (trick) pc *= 0.55; if (heavy) pc *= 0.7; if (last) pc *= 0.7;
+        let pc = (chest ? 0.4 + 0.55 * r.catch : 0.12 + 0.3 * r.catch) * (1 + this.abil('catchWindow', a.team)); if (trick) pc *= 0.55; if (heavy) pc *= 0.7; if (last) pc *= 0.7;
         if (Math.random() < pc) kind = 'catch';
-        else if (hImp > 1.3 * sc && impactF - (this.wf || 0) - delay > TUNE.duckAfter + 3) kind = 'duck';
-        else kind = 'dodge';
+        else kind = this.pickEvade(a, hImp, sc, impactF - (this.wf || 0) - delay);
       }
       a.ai.react = { B, aware: true, kind, at: (this.wf || 0) + delay, impactF, src: read ? 'load' : 'flight' };
       this.awStat('k_' + kind); if (a.held && kind === 'block') this.awStat('holderBlock');
-      if (kind === 'catch') { this.awStat('catchTry_' + a.arch); const err = Math.round((Math.random() - 0.5) * 2 * (1 - r.catch) * 8); a.ai.press = Math.max((this.wf || 0) + delay, impactF - (8 + err)); }
+      if (kind !== 'catch' && kind !== 'block') { const tr = this.dodgeTier(a); this.awStat('ev_' + tr); this.awStat('ev_' + tr + '_' + kind); }
+      this.awStat('aware_' + this.dodgeTier(a));
+      if (kind === 'catch') { this.awStat('catchTry_' + a.arch); if (this.abil('catchWindow', a.team)) this.abilityTell(a, 'catchWindow'); const err = Math.round((Math.random() - 0.5) * 2 * (1 - r.catch) * 8 * (1 - this.abil('catchWindow', a.team))); a.ai.press = Math.max((this.wf || 0) + delay, impactF - (8 + err)); }
       else a.ai.press = -1;
       if (kind === 'duck') a.ai.press = Math.max((this.wf || 0) + delay, impactF - TUNE.duckAfter - 3);
       // the tell: a quick turn toward the throw and a tiny ! (brand gold for FINAL BOSS, lime for the Glitches)
       if (!a.locked()) a.yaw = Math.atan2(th.x - a.x, th.z - a.z);
       this.pop(a, '!', 'tiny ' + (a.team === 0 ? 'gold sh0' : 'lime sh1'));
     }
+  }
+  dodgeTier(a) { const f = (a.rt || FB_BASE).foot; return f < 0.55 ? 'beginner' : f < 0.78 ? 'mid' : 'elite'; }
+  pickEvade(a, hImp, sc, lead) {
+    // P0j athletic evasion, scaled by the dodge (footwork) rating: low balls get a hop, high balls a duck, chest-high balls a sidestep,
+    // lean, spin, dive or (elite only) a late matador pull-back; beginners sometimes freeze
+    const f = (a.rt || FB_BASE).foot, tier = this.dodgeTier(a);
+    if (f < 0.55 && Math.random() < (0.55 - f) * 0.9) return 'freeze';
+    if (hImp < 0.55 * sc && lead > 14) return Math.random() < 0.45 + 0.45 * f ? 'hop' : 'dodge';
+    if (hImp > 1.3 * sc && lead > TUNE.duckAfter + 3) return Math.random() < 0.75 ? 'duck' : 'dodge';
+    const nearLine = Math.abs(a.z) > HZ - 1.6;
+    const W = [['dodge', 1], ['lean', 0.5 + f], ['spin', 0.2 + f * 0.8], ['dive', nearLine ? 0.05 : 0.15 + 0.6 * f], ['matador', tier === 'elite' && lead > 8 ? 1.3 : 0]];
+    let r = Math.random() * W.reduce((t, w) => t + w[1], 0);
+    for (const [k, w] of W) { r -= w; if (r <= 0) return k; }
+    return 'dodge';
+  }
+  evadeDir(a, B) {
+    // step off the ball's line, away from side lines, and never into a teammate who is set to catch
+    const cross = B.vx * (a.z - B.z) - B.vz * (a.x - B.x); let dz = cross >= 0 ? 1 : -1;
+    if (Math.abs(a.z) > HZ - 1.2 && Math.sign(a.z) === dz) dz = -dz;
+    for (const m of this.teams[a.team]) if (m !== a && m.ai.react && m.ai.react.kind === 'catch' && Math.abs(m.x - a.x) < 1.4 && Math.sign(m.z - a.z) === dz && Math.abs(m.z - a.z) < 1.6) { dz = -dz; break; }
+    return dz;
   }
   reactIntent(a, it) {
     // returns true when an aware reaction owns this player's input this tick
@@ -2508,6 +2557,20 @@ class Game {
     if (R.kind === 'save') { const d = Math.hypot(R.tx - a.x, R.tz - a.z); if (d > 0.35) { it.mx = (R.tx - a.x) / d; it.mz = (R.tz - a.z) / d; } a.yaw = Math.atan2(R.B.x - a.x, R.B.z - a.z); return true; }
     if (R.kind === 'catch') { if ((this.wf || 0) < R.impactF + 4) { a.yaw = Math.atan2(R.B.x - a.x, R.B.z - a.z); return true; } return false; }
     if (R.kind === 'duck') { it.catchHeld = true; return true; }
+    if (R.kind === 'freeze') return true;
+    if (R.kind === 'hop') { if ((this.wf || 0) >= R.impactF - 14 && !R.done && a.h <= 0.001) { it.jump = true; R.done = 1; } return true; }
+    if (R.kind === 'lean' || R.kind === 'spin' || R.kind === 'dive' || R.kind === 'matador') {
+      const lead = { lean: 10, spin: 12, dive: 13, matador: 7 }[R.kind];
+      if (!R.done && (this.wf || 0) >= R.impactF - lead && !LOCKED.has(a.state)) {
+        R.done = 1; const dz = this.evadeDir(a, R.B), sp = { lean: 1.4, spin: 2.8, dive: 6.2, matador: 3.6 }[R.kind] * (0.7 + 0.5 * (a.rt || FB_BASE).foot);
+        a.set(R.kind); a.vz = dz * sp; a.vx = R.kind === 'dive' ? 0 : a.side * 0.6; a.leanDir = dz; a.diveDir = dz;
+        if (R.kind === 'dive') this.dust(a, 4);
+        // elite dodgers sometimes chain a second move (a sidestep the other way)
+        if ((a.rt || FB_BASE).foot > 0.8 && Math.random() < 0.35) { R.chain = { at: (this.wf || 0) + ({ lean: 14, spin: 16, matador: 11, dive: 34 }[R.kind]), dz: -dz }; this.awStat('chain'); }
+      }
+      if (R.chain && (this.wf || 0) >= R.chain.at && !LOCKED.has(a.state)) { it.mz = R.chain.dz; }
+      return true;
+    }
     if (R.kind === 'dodge') {
       if (R.dz == null) {
         // step off the ball's line, never over a side line or the center line
@@ -2560,6 +2623,11 @@ class Game {
       case 'down': if (a.st >= 24) a.set('ko'); return;
       case 'walkin': if (a.st >= 20) a.set('idle'); return;
       case 'stagger': return;
+      case 'lean': if (a.st >= 14) a.set('idle'); return;
+      case 'spin': a.yaw += 0.42; if (a.st >= 16) a.set('idle'); return;
+      case 'matador': if (a.st >= 11) a.set('idle'); return;
+      case 'dive': if (a.st >= 16) { a.set('getup'); a.vx = a.vz = 0; if (Math.abs(a.z) > HZ - 0.3 && this.startTeeter && this.phase === 'play') { a.set('idle'); this.startTeeter(a, 'side', Math.sign(a.z), 2.2); } } return;
+      case 'getup': if (a.st >= 18) a.set('idle'); return;
       case 'pump': if (a.st >= 14) a.set('idle'); return;
     }
     if (it.catch && a.catchCool === 0 && st !== 'air') { a.catchF = this.wf || 0; a.set('catchready'); a.catchHeld = 0; }
@@ -2582,7 +2650,7 @@ class Game {
       else { a.runF++; if (a.runF % TUNE.stepF === 0) { a.steps++; if (a === this.user) this.sfx.step(); this.dust(a); } a.vx = a.runDir * TUNE.run; a.vz = it.mz * TUNE.walk * 0.6; return; }
     }
     const mag = Math.hypot(it.mx, it.mz);
-    if (mag > 0.15) { const k = Math.min(1, mag) / mag; const sp = TUNE.walk * (a.boss && this.p2 ? 1.15 : 1); a.vx = it.mx * k * sp; a.vz = it.mz * k * sp * 0.85; if (a.state !== 'walk') a.set('walk'); }
+    if (mag > 0.15) { const k = Math.min(1, mag) / mag; const sp = TUNE.walk * (a.boss && this.p2 ? 1.15 : 1) * (1 + this.abil('moveSpeed', a.team)) * (a.ai.react && a.ai.react.aware && a.ai.react.kind === 'dodge' ? 0.8 + 0.7 * (a.rt || FB_BASE).foot : 1); if (a.team === 1 && mag > 0.8 && this.abil('moveSpeed', 1)) this.abilityTell(a, 'moveSpeed'); a.vx = it.mx * k * sp; a.vz = it.mz * k * sp * 0.85; if (a.state !== 'walk') a.set('walk'); }
     else { a.vx *= 0.6; a.vz *= 0.6; if (a.state !== 'idle') a.set('idle'); }
   }
   walkTo(a, tx, tz, sp) {
@@ -2603,6 +2671,7 @@ class Game {
     if (a.state === 'run') { if (a.steps >= TUNE.powMin && a.steps <= TUNE.powMax) { power = true; type = a.shots[0]; } else type = 'dash'; }
     else if (inAir) { const f = a.airF; if (a.airSteps >= 1 && f >= TUNE.airPowA && f <= TUNE.airPowB) { power = true; type = a.shots[1]; } else type = 'jump'; }
     if (a.boss && this.p2 && Math.random() < 0.6) { power = true; type = a.shots[(Math.random() * 2) | 0]; }
+    if (a.team === 1 && !power && !inAir && Math.random() < this.abil('throwCurve', 1)) { type = 'hook'; this.abilityTell(a, 'throwCurve'); }
     a.wantPower = power; a.throwType = type;
     a.throwTarget = this.pickTarget(a, it);
     this.windupNotice(a);
@@ -2661,7 +2730,8 @@ class Game {
     const cpu = a !== this.user || !!this.simAll, rt = a.rt || FB_BASE;
     // a power arm's ball is heavier: faster, louder, a wider trail
     B.heavy = cpu && rt.power >= 0.84;
-    const spd = ({ normal: TUNE.vNormal, dash: TUNE.vDash, jump: TUNE.vJump, comet: 23, hook: 20, hop: 20, moon: 13, zig: 19 }[B.type] || 14) * (cpu ? 0.9 + 0.22 * rt.power : 1);
+    const sBoost = this.abil('throwSpeed', a.team); if (sBoost) this.abilityTell(a, 'throwSpeed');
+    const spd = ({ normal: TUNE.vNormal, dash: TUNE.vDash, jump: TUNE.vJump, comet: 23, hook: 20, hop: 20, moon: 13, zig: 19 }[B.type] || 14) * (cpu ? 0.9 + 0.22 * rt.power : 1) * (1 + sBoost);
     let tx = t ? t.x : a.x - a.side * 9, tz = t ? t.z : a.z;
     if (t) { const d0 = Math.hypot(tx - B.x, tz - B.z); const eta0 = d0 / spd; tx += t.vx * eta0 * 0.6; tz += t.vz * eta0 * 0.6; }
     if (cpu && t) tz += (Math.random() - 0.5) * 1.5 * (1 - rt.acc);   // accuracy: command players hit their spot
@@ -2697,7 +2767,7 @@ class Game {
     if (a.state === 'air' || a.h > 0) {
       a.vh -= GRAV * DT; a.h += a.vh * DT; a.x += a.vx * DT; a.z += a.vz * DT;
       if (a.h <= 0) { a.h = 0; a.vh = 0; if (a.state === 'air') { a.set('land'); this.dust(a, 3); } a.vx *= 0.3; a.vz *= 0.3; }
-    } else if (!a.locked() || a.state === 'walkin') { a.x += a.vx * DT; a.z += a.vz * DT; }
+    } else if (!a.locked() || a.state === 'walkin' || DODGES.has(a.state)) { a.x += a.vx * DT; a.z += a.vz * DT; if (DODGES.has(a.state)) { a.vx *= 0.93; a.vz *= 0.93; } }
     else { a.vx *= 0.8; a.vz *= 0.8; a.x += a.vx * DT * 0.3; a.z += a.vz * DT * 0.3; }
     this.clampAthlete(a);
     // facing
@@ -2771,14 +2841,14 @@ class Game {
       }
       if (B.type !== 'hop' && B.h <= 0.22) { B.h = 0.22; this.killBall(B, 'floor'); this.dustAt(B.x, B.z, 2); return; }
       if (B.type === 'hop' && B.bounces > 5) { this.killBall(B, 'floor'); return; }
-      if (Math.abs(B.x) > 12.3 || Math.abs(B.z) > 6.6) { this.killBall(B, 'wall'); return; }
+      if (Math.abs(B.x) > 12.3 || Math.abs(B.z) > HZ + 2.1) { this.killBall(B, 'wall'); return; }
       this.placeBallMesh(B); return;
     }
     // loose (dead) ball
     B.vh -= GRAV * DT; B.x += B.vx * DT; B.z += B.vz * DT; B.h += B.vh * DT;
     if (B.h <= 0.22) { B.h = 0.22; if (Math.abs(B.vh) > 1.5) { this.sfx.bounce(Math.min(1, Math.abs(B.vh) / 7)); B.vh = -B.vh * 0.5; } else B.vh = 0; B.vx *= 0.94; B.vz *= 0.94; }
     if (Math.abs(B.x) > 12) { B.x = Math.sign(B.x) * 12; B.vx = -B.vx * 0.5; }
-    if (Math.abs(B.z) > 6.2) { B.z = Math.sign(B.z) * 6.2; B.vz = -B.vz * 0.5; }
+    if (Math.abs(B.z) > HZ + 1.7) { B.z = Math.sign(B.z) * (HZ + 1.7); B.vz = -B.vz * 0.5; }
     const slow = Math.hypot(B.vx, B.vz) < 0.35 && B.h <= 0.23;
     if (slow) B.restF++; else B.restF = 0;
     // shaggers return balls that rolled out a side line, or sat out the back too long
@@ -2819,9 +2889,11 @@ class Game {
         if (!f.active || f.role !== 'in' || f.oob > 0 || B.hitSet.has(f)) continue;
         if (B.pop ? f.team !== B.pop.team : f.team === B.team) continue;
         if (f.state === 'knock' || f.state === 'down' || f.state === 'ko' || f.state === 'hitstun') continue;
-        const r = 0.4 * f.scale + 0.22;
+        // evading a ball you saw: the better the footwork, the smaller the target (beginner about 1.06x, elite about 0.76x)
+        const dh = DODGE_HIT[f.state], fr = f.ai && f.ai.react, ev = fr && fr.aware && fr.B === B && fr.kind !== 'catch' && fr.kind !== 'block' && fr.kind !== 'freeze';
+        const r = (0.4 * f.scale + 0.22) * (dh ? dh.r : 1) * (ev ? 1.3 - 0.6 * (f.rt || FB_BASE).foot : 1);
         if (Math.hypot(f.x - B.x, f.z - B.z) > r) continue;
-        const top = (f.state === 'duck' ? 1.0 : 1.98) * f.scale + f.h, bot = f.h - 0.1;
+        const top = (f.state === 'duck' ? 1.0 : (dh ? dh.top : 1.98)) * f.scale + f.h, bot = f.h - 0.1;
         if (B.h > top + 0.12 || B.h < bot) continue;
         if (!B.live) { this.killBall(B, 'notlive'); break; }
         this.contact(f, B); break;
@@ -2838,6 +2910,13 @@ class Game {
   }
   contact(f, B) {
     const thrower = B.thrower;
+    // P0j: a late athletic move (lean, spin, dive, matador) against a ball the player saw is a skill check at contact
+    const fr = f.ai && f.ai.react;
+    if (fr && fr.aware && fr.B === B && fr.done && DODGES.has(fr.kind) && f.state !== 'hitstun') {
+      const base = { lean: 0.55, spin: 0.6, dive: 0.75, matador: 0.85 }[fr.kind], foot = (f.rt || FB_BASE).foot;
+      if (Math.random() < base * (0.5 + 0.55 * foot)) { B.hitSet.add(f); this.awStat('evadeOK_' + this.dodgeTier(f)); this.pop(f, 'MISS', 'tiny ' + (f.team === 0 ? 'gold sh0' : 'lime sh1')); return; }
+      this.awStat('evadeFail_' + this.dodgeTier(f));
+    }
     const crouched = f.state === 'duck';
     const headLine = f.h + (crouched ? 0.8 : 1.6) * f.scale;
     if (B.pop && f.team === B.pop.team && f.state === 'catchready' && ((this.wf || 0) - f.catchF) <= TUNE.catchBobble) { return this.doCatch(f, B, true); }
@@ -2957,6 +3036,7 @@ class Game {
     this.spark(B.x, B.h, B.z, power ? 2.6 : 1.8); this.impact(B.x, B.h, B.z, power, B.thrower ? B.thrower.team : 1 - f.team);
     if (!this.rm && power) this.flash(0.22, true);
     this.sfx.hit(power); if (power || B.heavy) this.sfx.bigHit();
+    if (this.aiPlays(f)) { const tr = this.dodgeTier(f); this.awStat('hitTaken_' + tr); const R = f.ai.react; if (R && R.B === B && R.aware && R.kind !== 'catch' && R.kind !== 'block') this.awStat('evHit_' + tr); }
     if (B.thrower && this.aiPlays(B.thrower)) { this.awStat('hit_' + B.thrower.arch); if (B.sync) this.awStat('syncHits'); else this.awStat('singleHits'); if (B.fakeShot) this.awStat('fakeShotHits'); }
     if (f === this.user) this.haptic([45, 35, 70]); else if (B.thrower === this.user) this.haptic(power ? [24, 20, 30] : 16);
     const dir = Math.sign(B.vx) || -f.side;
@@ -3557,6 +3637,7 @@ const API = {
   state() { return G ? G.snapshot() : null; },
   roster: ROSTER.map(r => ({ name: r.key, num: r.num })),
   rules: RULES,
+  court: { HX, HZ, ATK, width: COURT_W },
   stage(name) { return G && !G.dead ? G.stage(name) : false; },
   destroy() { if (G) { G.destroy(); G = null; } },
   _game() { return G; },

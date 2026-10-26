@@ -581,3 +581,8 @@ html.fbg-lock, html.fbg-lock body{overflow:hidden}
 .fbg-root.is-mobile.is-wide .fbg-coach.on{transform:translateX(-50%)}
 .fbg-root.is-mobile.is-wide .fbg-coach b{font-size:16px}
 .fbg-root.is-narrow .fbg-coach{bottom:auto; top:72px; left:8px}
+.fbg-root.is-mobile.is-narrow .fbg-touch > .fbg-tb.dash{left:calc(136px + var(--sl)); bottom:calc(106px + var(--sb)); width:56px; height:56px; font-size:12px}
+/* the ball-control chip sits below the team panel so it never covers the health bar */
+.fbg-root:not(.is-mobile).is-wide .fbg-ctl{top:92px}
+.fbg-root.is-mobile.is-wide .fbg-coach{left:calc(10px + var(--sl)); top:calc(74px + var(--st)); transform:none}
+.fbg-root.is-mobile.is-wide .fbg-coach.on{transform:none}
