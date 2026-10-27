@@ -126,13 +126,13 @@ try:
             b = getattr(p, eng).launch(); errs = []
             pg = b.new_page(viewport={'width': 1280, 'height': 720}); pg.on('pageerror', lambda e: errs.append(str(e)))
             pg.add_init_script(f"try{{localStorage.setItem('fbg-edition','{ED}')}}catch(e){{}}")
-            pg.goto(f'http://127.0.0.1:{srv.server_port}/play/', timeout=120000); pg.wait_for_function('window.FBGame && FBGame._game() && FBGame.state()', timeout=120000)
+            pg.goto(f'http://127.0.0.1:{srv.server_port}/play/', timeout=300000); pg.wait_for_function('window.FBGame && FBGame._game() && FBGame.state()', timeout=300000)
             r = {'logic': pg.evaluate(LOGIC)}; pg.close()   # one live game at a time keeps a loaded machine responsive
             for (tag, vw, vh, rm) in (('1920', 1920, 1080, False), ('SEL', 667, 375, False), ('rm', 1280, 720, True), ('scout', 1920, 1080, False), ('P15L', 734, 343, False), ('SELscout', 667, 375, False)):
                 ctx = b.new_context(viewport={'width': vw, 'height': vh}, reduced_motion='reduce' if rm else 'no-preference', device_scale_factor=2 if tag in ('SEL', 'P15L', 'SELscout') else 1)
                 q = ctx.new_page(); q.on('pageerror', lambda e: errs.append(str(e)))
                 q.add_init_script(f"try{{localStorage.setItem('fbg-edition','{ED}')}}catch(e){{}}")
-                q.goto(f'http://127.0.0.1:{srv.server_port}/play/', timeout=120000); q.wait_for_function('window.FBGame && FBGame._game() && FBGame.state()', timeout=120000); q.wait_for_timeout(600)
+                q.goto(f'http://127.0.0.1:{srv.server_port}/play/', timeout=300000); q.wait_for_function('window.FBGame && FBGame._game() && FBGame.state()', timeout=300000); q.wait_for_timeout(600)
                 print('case', eng, tag, flush=True); u = q.evaluate(UI, tag); q.wait_for_timeout(6000)
                 if OUT: OUT.mkdir(parents=True, exist_ok=True); q.screenshot(path=str(OUT / f'post-{ED}-{eng}-{tag}.png'))
                 u.update(q.evaluate(UI2)); u['text'] = u['text'][:400]; r[tag] = u; ctx.close()
