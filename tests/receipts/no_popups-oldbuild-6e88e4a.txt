@@ -1,0 +1,57 @@
+{
+ "chromium": {
+  "guards0": 0,
+  "reachedPlay": false,
+  "edges": [
+   "pass:keydown+shift",
+   "throw:keydown",
+   "pass:keydown+shift",
+   "pass:keydown+shift",
+   "throw:keydown+shift",
+   "catch:keydown"
+  ],
+  "inputOK": true,
+  "clicks": 42,
+  "pauseState": true,
+  "chipOnPause": true,
+  "phaseEnd": "intro",
+  "guardsLive": 0,
+  "guardsAfterDestroy": 0,
+  "guardsAfterRemount": 0,
+  "listenersOK": false,
+  "popups": [
+   "about:blank",
+   "about:blank"
+  ],
+  "pages": 3,
+  "mainNavs": [],
+  "mainUrl": true,
+  "errors": []
+ },
+ "webkit": {
+  "guards0": 0,
+  "reachedPlay": true,
+  "edges": [
+   "pass:keydown+shift",
+   "throw:keydown",
+   "pass:keydown+shift",
+   "throw:keydown+shift",
+   "catch:keydown"
+  ],
+  "inputOK": true,
+  "clicks": 42,
+  "pauseState": true,
+  "chipOnPause": true,
+  "phaseEnd": "play",
+  "guardsLive": 0,
+  "guardsAfterDestroy": 0,
+  "guardsAfterRemount": 0,
+  "listenersOK": false,
+  "popups": [],
+  "pages": 1,
+  "mainNavs": [],
+  "mainUrl": true,
+  "errors": []
+ }
+}
+FAIL chromium, webkit @ {"edition": "mobile", "commit": "6e88e4a", "v": "nina-20261026"}
