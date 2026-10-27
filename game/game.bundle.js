@@ -3439,7 +3439,9 @@ class Game {
     const dots = (t) => this.teams[t].map(a => `<i class="${a.role === 'in' || a.role === 'returning' ? '' : 'off'}${a === this.user ? ' me' : ''}" title="${esc(a.name)}"></i>`).join('');
     this.$.l0.innerHTML = dots(0); this.$.l1.innerHTML = dots(1);
     this.$.l0.classList.toggle('danger', this.liveCount(0) <= 2 && this.phase === 'play'); this.$.l1.classList.toggle('danger', this.liveCount(1) <= 2 && this.phase === 'play');
-    const q = (t) => this.queue[t].map((a, i) => `<span>${i === 0 ? 'NEXT ' : ''}${a.num && a.num !== '?' ? '#' + a.num : esc(a.name)}</span>`).join('');
+    // main 10/27: a bare "NEXT #0" read like a placeholder; the next player in the outline is named, the rest keep their numbers
+    const num = (a) => a.num && a.num !== '?' ? '#' + a.num : '';
+    const q = (t) => this.queue[t].map((a, i) => `<span>${i === 0 ? 'NEXT ' + esc(a.name) + (num(a) ? ' ' + num(a) : '') : (num(a) || esc(a.name))}</span>`).join('');
     this.$.q0.innerHTML = this.queue[0].length ? 'Outline: ' + q(0) : '';
     { const nx = this.root.querySelector('.fbg-next'), n0 = this.queue[0][0]; if (nx) { nx.hidden = !n0 || this.phase !== 'play'; if (n0) nx.innerHTML = `<b>NEXT IN</b> ${esc(n0.name)}${n0.num && n0.num !== '?' ? ' #' + n0.num : ''}${this.queue[0].length > 1 ? ` <i>+${this.queue[0].length - 1}</i>` : ''}`; } } this.$.q1.innerHTML = this.queue[1].length ? 'Outline: ' + q(1) : '';
   }
