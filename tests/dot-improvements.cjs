@@ -7,9 +7,10 @@ function restore(stored,query){const c={LOOKS,URLSearchParams,location:{search:q
 test('null storage recovers to a valid default',()=>assert.equal(restore('null','').mode,'fb'));
 test('malformed storage recovers',()=>assert.equal(restore('{broken','').mode,'fb'));
 test('array storage recovers',()=>assert.equal(restore('[]','').mode,'fb'));
-test('saved looks stay in their matching modes',()=>{const r=restore('{"fb":"vc01","vc":"fb02"}','');assert.equal(r.cur.fb,'fb02');assert.ok(r.cur.vc.startsWith('vc'))});
+test('saved looks stay in their matching modes',()=>{const r=restore('{"fb":"vc01","vc":"fb02","lo":1}','');assert.equal(r.cur.fb,'lo01');assert.ok(r.cur.vc.startsWith('vc'))});
+test('the final jersey opens once, then a saved look is kept',()=>{assert.equal(restore('{"fb":"fb03","mode":"vc"}','').cur.fb,'lo01');assert.equal(restore('{"fb":"fb03","mode":"vc"}','').mode,'fb');assert.equal(restore('{"fb":"fb03","lo":1}','').cur.fb,'fb03')});
 test('explicit shared look wins over conflicting mode',()=>{const r=restore('{}','?mode=fb&look=vc01');assert.equal(r.mode,'vc');assert.equal(r.cur.vc,'vc01')});
-test('unknown look is ignored safely',()=>assert.equal(restore('{}','?look=not-real').cur.fb,'fb02'));
+test('unknown look is ignored safely',()=>assert.equal(restore('{}','?look=not-real').cur.fb,'lo01'));
 const share=source.slice(source.indexOf('function choiceURL(){'),source.indexOf('function updateShare(){'));
 const c={URL,location:{href:'https://gordonusc.github.io/final-boss/?from=team#gear'},mode:'vc',look:LOOKS.find(x=>x.id==='vc01'),pick:'jersey',cutUser:'rb'};vm.createContext(c);vm.runInContext(share,c);
 test('copied link includes exact look, mode, gear and cut',()=>{const u=new URL(vm.runInContext('choiceURL()',c));assert.equal(u.searchParams.get('look'),'vc01');assert.equal(u.searchParams.get('mode'),'vc');assert.equal(u.searchParams.get('pick'),'jersey');assert.equal(u.searchParams.get('cut'),'rb');assert.equal(u.hash,'#kit');assert.equal(u.searchParams.get('from'),'team')});
