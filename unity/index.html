@@ -47,7 +47,7 @@
         productName: "Boss Rush",
         productVersion: "3.0-preview",
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2), // cap the render size on 3x phones
+        devicePixelRatio: (+new URLSearchParams(location.search).get('dpr')) || Math.min(window.devicePixelRatio || 1, 1.5), // framerate: render at most 1.5x (was 2x); ?dpr= overrides for testing
       }, function (p) { var l = document.getElementById('br-load'); if (l) l.textContent = 'LOADING ' + Math.round(p * 100) + '%'; }).then((unityInstance) => {
         var l = document.getElementById('br-load'); if (l) l.remove();
         var info = document.getElementById('br-preview'); if (info) info.remove();
