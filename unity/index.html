@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Boss Rush | Unity v3 Preview</title>
+  </head>
+  <body style="text-align: center; padding: 0; border: 0; margin: 0; background: #0E0B16; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none;">
+    <div id="br-load" style="position:fixed;left:0;right:0;top:45%;color:#FFC93C;font:700 20px system-ui,sans-serif;letter-spacing:2px;z-index:2">LOADING</div>
+    <aside id="br-preview" aria-label="Edition information" style="position:fixed;left:0;right:0;top:54%;text-align:center;z-index:3;padding:12px;font:16px system-ui,sans-serif;color:#fff">
+      Boss Rush Unity v3 Preview<br>
+      <a href="../play/?pick" style="display:inline-block;margin-top:12px;color:#FFC93C">Play the browser edition instead</a>
+    </aside>
+    <canvas id="unity-canvas" width=960 height=540 tabindex="-1" style="width: 960px; height: 540px; background: #1F1F20"></canvas>
+    <script src="Build/WebGL.loader.js"></script>
+    <script>
+      {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+
+        var canvas = document.querySelector("#unity-canvas");
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.position = "fixed";
+
+        document.body.style.textAlign = "left";
+
+      }
+
+      function showLoadFailure(error) {
+        console.error("Boss Rush Unity preview startup failed", error);
+        var l = document.getElementById("br-load");
+        if (l) { l.setAttribute("role", "alert"); l.textContent = "Unity could not start on this device."; }
+      }
+      if (typeof createUnityInstance !== "function") {
+        showLoadFailure(new Error("Unity loader unavailable"));
+      } else createUnityInstance(document.querySelector("#unity-canvas"), {
+        arguments: [],
+        dataUrl: "Build/WebGL.data.unityweb",
+        frameworkUrl: "Build/WebGL.framework.js.unityweb",
+        codeUrl: "Build/WebGL.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Darby",
+        productName: "Boss Rush",
+        productVersion: "3.0-preview",
+        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2), // cap the render size on 3x phones
+      }, function (p) { var l = document.getElementById('br-load'); if (l) l.textContent = 'LOADING ' + Math.round(p * 100) + '%'; }).then((unityInstance) => {
+        var l = document.getElementById('br-load'); if (l) l.remove();
+        var info = document.getElementById('br-preview'); if (info) info.remove();
+      }).catch(showLoadFailure);
+    </script>
+  </body>
+</html>
