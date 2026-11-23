@@ -15,7 +15,7 @@
     </aside>
     <noscript><p style="color:#FFC93C;font:700 18px system-ui,sans-serif;padding:24px">Boss Rush Unity edition: FINAL BOSS against an opponent drawn at random from all 17 teams, with team calls (3, 2, 1, GO; Cover; Counter). This edition needs JavaScript and WebGL. <a href="../" style="color:#FFC93C">Read the FINAL BOSS team file instead.</a></p></noscript>
     <canvas id="unity-canvas" width=960 height=540 tabindex="-1" style="width: 960px; height: 540px; background: #1F1F20"></canvas>
-    <script src="Build/WebGL.loader.js?v=tac2-20261123"></script>
+    <script src="Build/WebGL.loader.js?v=tac2b-20261123"></script>
     <script>
       {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -42,9 +42,9 @@
         showLoadFailure(new Error("Unity loader unavailable"));
       } else createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
-        dataUrl: "Build/WebGL.data.unityweb?v=tac2-20261123",
-        frameworkUrl: "Build/WebGL.framework.js.unityweb?v=tac2-20261123",
-        codeUrl: "Build/WebGL.wasm.unityweb?v=tac2-20261123",
+        dataUrl: "Build/WebGL.data.unityweb?v=tac2b-20261123",
+        frameworkUrl: "Build/WebGL.framework.js.unityweb?v=tac2b-20261123",
+        codeUrl: "Build/WebGL.wasm.unityweb?v=tac2b-20261123",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Darby",
         productName: "Boss Rush",
