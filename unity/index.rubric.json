@@ -1,0 +1,10 @@
+{
+ "person_made_it": "Gordon's FINAL BOSS roster, his team's calls and kits; the tactics come from real dodgeball rulebooks and coaching material (USA Dodgeball, WDBF, British Dodgeball), cited in TACTICS-RESEARCH.md.",
+ "emcee_who_is_speaking": "Teammates call the plays out loud on court: '3, 2, 1, THROW!', 'COVER!', 'COUNTER!', 'BALL ME!'; the player can call them too with C or the CALL button.",
+ "what_time_of_day_is_this_room": "Night in a lit Vegas-style rec gym, Sin City weekend energy; Quick Play now drops you against any of the 17 teams.",
+ "did_the_click_pay_me": "Quick match draws a new opponent every time and shows QUICK DRAW on the VS card; REMATCH keeps them, NEW DRAW rolls again; a called GO turns teammates into a counted volley.",
+ "works_for_the_recipient": "Unity WebGL: C key or the CALL button; NEW DRAW on the results card; tested in Chromium with CDP CPU throttle 20x; the frame-rate governor stays on.",
+ "taught_me_something": "Throw on the count: a ball released late in a volley is twice as catchable, an in-sync one is harder; the last two on a side cover each other; the fastest players run the opening rush.",
+ "told_me_the_truth": "Sin City 2027 Mixed No-Sting is shown as a format (up to 8, at least 2 women per team, every team qualifies); its ball count and throw clock are settings because the event page does not publish them.",
+ "weakest": "No human playtest of the Call Wheel yet; the AI decides by simulation, so real players may find the 0.8 s commit too slow or too fast."
+}

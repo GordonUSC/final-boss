@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- STYLE: Versus Mode (the FINAL BOSS team file system: Boss Black, power gold, the drawn opponent's colors on court) | WHY: the Unity edition is the same arena as the browser edition, so it keeps one look across editions | ALT: Arcade Cabinet bezel, rejected (it frames the court smaller on phones) -->
     <title>Boss Rush | Unity v3 Preview</title>
   </head>
   <body style="text-align: center; padding: 0; border: 0; margin: 0; background: #0E0B16; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none;">
@@ -11,8 +13,9 @@
       Boss Rush Unity v3 Preview<br>
       <a href="../play/?pick" style="display:inline-block;margin-top:12px;color:#FFC93C">Play the browser edition instead</a>
     </aside>
+    <noscript><p style="color:#FFC93C;font:700 18px system-ui,sans-serif;padding:24px">Boss Rush Unity edition: FINAL BOSS against an opponent drawn at random from all 17 teams, with team calls (3, 2, 1, GO; Cover; Counter). This edition needs JavaScript and WebGL. <a href="../" style="color:#FFC93C">Read the FINAL BOSS team file instead.</a></p></noscript>
     <canvas id="unity-canvas" width=960 height=540 tabindex="-1" style="width: 960px; height: 540px; background: #1F1F20"></canvas>
-    <script src="Build/WebGL.loader.js"></script>
+    <script src="Build/WebGL.loader.js?v=tac2-20261123"></script>
     <script>
       {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -39,9 +42,9 @@
         showLoadFailure(new Error("Unity loader unavailable"));
       } else createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
-        dataUrl: "Build/WebGL.data.unityweb",
-        frameworkUrl: "Build/WebGL.framework.js.unityweb",
-        codeUrl: "Build/WebGL.wasm.unityweb",
+        dataUrl: "Build/WebGL.data.unityweb?v=tac2-20261123",
+        frameworkUrl: "Build/WebGL.framework.js.unityweb?v=tac2-20261123",
+        codeUrl: "Build/WebGL.wasm.unityweb?v=tac2-20261123",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Darby",
         productName: "Boss Rush",
